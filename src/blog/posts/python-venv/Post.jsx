@@ -1,4 +1,3 @@
-import '../Post.scss';
 import Python from './python.png'
 import PythonPackage from './PythonPackage.png'
 import SyntaxHighlighter from 'react-syntax-highlighter';
@@ -93,7 +92,7 @@ export default function Post() {
         to start using them today.
       </p>
       <Alert variant="info">
-        This post assumes you're using Python >3.6. Previous versions of Python do not
+        This post assumes you're using Python {'>'}3.6. Previous versions of Python do not
         include the <code>venv</code> command. If you're using a different version, I 
         would suggest taking a look at the <code>virtualenv</code> package.
       </Alert>

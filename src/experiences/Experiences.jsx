@@ -1,11 +1,9 @@
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
-import Fade from 'react-reveal/Fade';
 import {
-  Switch,
+  Routes,
   Route,
   Link,
-  useRouteMatch,
   useParams,
 } from 'react-router-dom';
 import { MdWork } from 'react-icons/md';
@@ -13,15 +11,13 @@ import './Experiences.scss';
 import { experiences } from './data';
 
 export default function Experiences() {
-  let match = useRouteMatch();
-
   return (
     <Container className="experiences">
       <h3 className="timeline-header mb-4">Experience</h3>
       <Row>
         {Object.entries(experiences).map(([slug, exp]) => (
           <Col xs={12} md={6} key={slug} className="mb-4">
-            <Fade right duration={500}>
+            <div className="fade-in">
               <Card className="experience-card h-100">
                 <Card.Body>
                   <Card.Title className="d-flex align-items-center gap-2">
@@ -35,24 +31,22 @@ export default function Experiences() {
                   </Card.Subtitle>
                   <Card.Text className="exp-date">{exp.date}</Card.Text>
                   <Card.Text>{exp.description}</Card.Text>
-                  <Link to={`${match.url}/${slug}`}>
+                  <Link to={slug}>
                     <Button variant="outline-primary" size="sm">
                       View Details
                     </Button>
                   </Link>
                 </Card.Body>
               </Card>
-            </Fade>
+            </div>
           </Col>
         ))}
       </Row>
 
       <Suspense fallback={<div>Loading...</div>}>
-        <Switch>
-          <Route path={`${match.path}/:expId`}>
-            <FetchExperience />
-          </Route>
-        </Switch>
+        <Routes>
+          <Route path=":expId" element={<FetchExperience />} />
+        </Routes>
       </Suspense>
     </Container>
   );

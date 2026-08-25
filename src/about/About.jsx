@@ -2,10 +2,9 @@ import { Container, Card, Col, Row, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { VerticalTimeline, VerticalTimelineElement }  from 'react-vertical-timeline-component';
 import 'react-vertical-timeline-component/style.min.css';
-import { MdSchool } from "react-icons/md"
+import { MdSchool } from "react-icons/md";
 import { SiPython, SiJavascript } from "react-icons/si";
 import { FaDatabase, FaEllipsisH } from "react-icons/fa";
-import Fade from 'react-reveal/Fade';
 import "./About.scss";
 
 export default function About() {
@@ -42,17 +41,17 @@ export default function About() {
           </p>
         </VerticalTimelineElement>
       </VerticalTimeline>
-      
+
       <div className="text-center mt-3 mb-4">
         <Link to="/experience">
           <Button variant="outline-primary">View All Experience</Button>
         </Link>
       </div>
-      
+
       <h3 className="mt-4 timeline-header mb-3">Skills</h3>
       <Row>
         <Col xs={6} lg={3} className="child-h-100">
-          <Fade right duration={500}>
+          <div className="fade-in">
             <Card className="text-center">
               <Card.Body>
                 <Card.Title className="d-flex justify-content-center logo py"><div><SiPython/></div></Card.Title>
@@ -62,10 +61,10 @@ export default function About() {
                 <Card.Text className="mb-0">SQLAlchemy</Card.Text>
               </Card.Body>
             </Card>
-          </Fade>
+          </div>
         </Col>
         <Col xs={6} lg={3} className="child-h-100">
-          <Fade right duration={500}>
+          <div className="fade-in">
             <Card className="text-center h-100">
               <Card.Body>
                 <Card.Title className="d-flex justify-content-center logo js"><div><SiJavascript/></div></Card.Title>
@@ -75,10 +74,10 @@ export default function About() {
                 <Card.Text className="mb-0">jQuery</Card.Text>
               </Card.Body>
             </Card>
-          </Fade>
+          </div>
         </Col>
         <Col xs={6} lg={3} className="child-h-100 mt-4 mt-lg-0">
-          <Fade right duration={500}>
+          <div className="fade-in">
             <Card className="text-center">
               <Card.Body>
                 <Card.Title className="d-flex justify-content-center logo db"><div><FaDatabase/></div></Card.Title>
@@ -88,10 +87,10 @@ export default function About() {
                 <Card.Text className="mb-0">MongoDB</Card.Text>
               </Card.Body>
             </Card>
-          </Fade>
+          </div>
         </Col>
         <Col xs={6} lg={3} className="child-h-100 mt-4 mt-lg-0">
-          <Fade right duration={500}>
+          <div className="fade-in">
             <Card className="text-center">
               <Card.Body>
                 <Card.Title className="d-flex justify-content-center logo other"><div><FaEllipsisH/></div></Card.Title>
@@ -101,7 +100,7 @@ export default function About() {
                 <Card.Text className="mb-0">DevOps</Card.Text>
               </Card.Body>
             </Card>
-          </Fade>
+          </div>
         </Col>
       </Row>
     </Container>
