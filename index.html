@@ -124,99 +124,118 @@
       background: var(--border);
     }
 
-    .timeline-item {
-      position: relative;
-      margin-bottom: 4rem;
+    .timeline-company {
+      margin-bottom: 3rem;
     }
 
-    .timeline-item:last-child {
+    .timeline-company:last-child {
       margin-bottom: 0;
     }
 
-    .timeline-item::before {
+    .company-header {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .company-header h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .company-header .location {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .company-header .total-period {
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+
+    .timeline-role {
+      position: relative;
+      margin-bottom: 2rem;
+      padding-left: 1.25rem;
+    }
+
+    .timeline-role::before {
       content: '';
       position: absolute;
       left: -3rem;
-      top: 0.6rem;
+      top: 0.65rem;
       width: 9px;
       height: 9px;
       border-radius: 50%;
       border: 2px solid var(--border);
       background: var(--bg);
-      transition: background 0.3s, border-color 0.3s;
     }
 
-    .timeline-item.aerospace::before { border-color: var(--aerospace); }
-    .timeline-item.tempo::before { border-color: var(--tempo); }
-    .timeline-item.parallel::before { border-color: var(--parallel); }
+    .timeline-role.aerospace::before { border-color: var(--aerospace); }
+    .timeline-role.tempo::before { border-color: var(--tempo); }
+    .timeline-role.parallel::before { border-color: var(--parallel); }
 
-    .timeline-item:hover::before {
-      background: currentColor;
-    }
-
-    .timeline-item.aerospace { color: var(--aerospace); }
-    .timeline-item.tempo { color: var(--tempo); }
-    .timeline-item.parallel { color: var(--parallel); }
-
-    .timeline-header {
+    .role-header {
       display: flex;
+      justify-content: space-between;
       align-items: baseline;
-      gap: 1rem;
       flex-wrap: wrap;
-      margin-bottom: 0.5rem;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
     }
 
-    .timeline-header h3 {
-      font-size: 1.35rem;
+    .role-header h4 {
+      font-size: 1.05rem;
       font-weight: 600;
       color: var(--text);
     }
 
-    .timeline-header .period {
-      font-size: 0.85rem;
+    .role-header .period {
+      font-size: 0.8rem;
       color: var(--muted);
-      font-weight: 400;
+      white-space: nowrap;
     }
 
-    .timeline-header .role {
-      font-size: 0.95rem;
-      color: var(--muted);
-      font-weight: 400;
-    }
-
-    .timeline-domain {
+    .role-domain {
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
       font-size: 0.8rem;
       font-weight: 500;
-      letter-spacing: 0.02em;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.6rem;
     }
 
-    .timeline-domain i {
-      font-size: 0.9rem;
+    .role-domain i {
+      font-size: 0.85rem;
     }
 
-    .timeline-item.aerospace .timeline-domain { color: var(--aerospace); }
-    .timeline-item.tempo .timeline-domain { color: var(--tempo); }
-    .timeline-item.parallel .timeline-domain { color: var(--parallel); }
+    .timeline-role.aerospace .role-domain { color: var(--aerospace); }
+    .timeline-role.tempo .role-domain { color: var(--tempo); }
+    .timeline-role.parallel .role-domain { color: var(--parallel); }
 
-    .timeline-bullets {
+    .role-bullets {
       list-style: none;
-      margin-top: 0.75rem;
     }
 
-    .timeline-bullets li {
+    .role-bullets li {
       position: relative;
       padding-left: 1.25rem;
-      margin-bottom: 0.5rem;
-      font-size: 0.95rem;
+      margin-bottom: 0.4rem;
+      font-size: 0.9rem;
       color: var(--muted);
       line-height: 1.6;
     }
 
-    .timeline-bullets li::before {
+    .role-bullets li::before {
       content: '›';
       position: absolute;
       left: 0;
@@ -224,17 +243,17 @@
       font-weight: 600;
     }
 
-    .timeline-tags {
+    .role-tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 1rem;
+      gap: 0.4rem;
+      margin-top: 0.75rem;
     }
 
     .tag {
       display: inline-block;
-      padding: 0.25rem 0.65rem;
-      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.72rem;
       font-weight: 500;
       border-radius: 4px;
       background: var(--bg);
@@ -245,7 +264,7 @@
     /* ── Skills ── */
     .skills-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 2rem;
     }
 
@@ -255,7 +274,7 @@
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
       padding-bottom: 0.5rem;
       border-bottom: 1px solid var(--border);
     }
@@ -265,8 +284,8 @@
     }
 
     .skill-group li {
-      padding: 0.35rem 0;
-      font-size: 0.95rem;
+      padding: 0.3rem 0;
+      font-size: 0.9rem;
       color: var(--text);
     }
 
@@ -421,8 +440,9 @@
       .hero { padding: 0 1.5rem; }
       .section { padding: 4rem 1.5rem; }
       .timeline { padding-left: 2rem; }
-      .timeline-item::before { left: -2rem; }
-      .timeline-header { flex-direction: column; gap: 0.25rem; }
+      .timeline-role::before { left: -2rem; }
+      .company-header { flex-direction: column; gap: 0.25rem; }
+      .role-header { flex-direction: column; gap: 0.25rem; }
       .education-item { flex-direction: column; gap: 0.25rem; }
       .project-card { padding: 1.5rem; }
     }
@@ -451,69 +471,162 @@
 
     <div class="timeline">
 
-      <div class="timeline-item parallel">
-        <div class="timeline-header">
+      <!-- ── Parallel Domain ── -->
+      <div class="timeline-company">
+        <div class="company-header">
           <h3>Parallel Domain</h3>
-          <span class="period">2023 — Present</span>
+          <span class="location">San Francisco, CA · Hybrid</span>
+          <span class="total-period">2024 — Present</span>
         </div>
-        <div class="timeline-domain">
-          <i class="fas fa-car"></i> Autonomous Vehicles
+
+        <div class="timeline-role parallel">
+          <div class="role-header">
+            <h4>Principal Software Developer</h4>
+            <span class="period">Mar 2026 — Present</span>
+          </div>
+          <div class="role-domain">
+            <i class="fas fa-car"></i> Autonomous Vehicles
+          </div>
+          <ul class="role-bullets">
+            <li>Lead technical direction for autonomous driving software systems</li>
+            <li>Drive architecture decisions across perception, planning, and simulation</li>
+          </ul>
         </div>
-        <div class="role">Software Developer</div>
-        <ul class="timeline-bullets">
-          <li>Building perception and planning software for autonomous vehicle systems</li>
-          <li>Working with large-scale simulation and real-world sensor data</li>
-          <li>Contributing to the stack that enables vehicles to navigate safely</li>
-        </ul>
-        <div class="timeline-tags">
-          <span class="tag">Python</span>
-          <span class="tag">C++</span>
-          <span class="tag">ROS</span>
-          <span class="tag">Simulation</span>
+
+        <div class="timeline-role parallel">
+          <div class="role-header">
+            <h4>Senior Software Developer</h4>
+            <span class="period">Sep 2024 — Mar 2026</span>
+          </div>
+          <div class="role-domain">
+            <i class="fas fa-car"></i> Autonomous Vehicles
+          </div>
+          <ul class="role-bullets">
+            <li>Build perception and planning software for autonomous vehicle systems</li>
+            <li>Work with large-scale simulation and real-world sensor data</li>
+            <li>Contribute to the stack that enables vehicles to navigate safely</li>
+          </ul>
+          <div class="role-tags">
+            <span class="tag">Python</span>
+            <span class="tag">C++</span>
+            <span class="tag">ROS</span>
+            <span class="tag">Simulation</span>
+          </div>
         </div>
       </div>
 
-      <div class="timeline-item tempo">
-        <div class="timeline-header">
+      <!-- ── Tempo ── -->
+      <div class="timeline-company">
+        <div class="company-header">
           <h3>Tempo</h3>
-          <span class="period">2019 — 2023</span>
+          <span class="location">San Francisco Bay Area · Hybrid</span>
+          <span class="total-period">2021 — 2024</span>
         </div>
-        <div class="timeline-domain">
-          <i class="fas fa-dumbbell"></i> Home Fitness
+
+        <div class="timeline-role tempo">
+          <div class="role-header">
+            <h4>Tech Lead Manager</h4>
+            <span class="period">Mar 2024 — Sep 2024</span>
+          </div>
+          <div class="role-domain">
+            <i class="fas fa-dumbbell"></i> Computer Vision & Machine Learning
+          </div>
+          <ul class="role-bullets">
+            <li>Lead technical direction of computer vision and machine learning at Tempo</li>
+          </ul>
         </div>
-        <div class="role">Software Engineer</div>
-        <ul class="timeline-bullets">
-          <li>Developed software for connected fitness hardware and mobile apps</li>
-          <li>Built features used by thousands of home users daily</li>
-          <li>Worked across the full stack — embedded to cloud</li>
-        </ul>
-        <div class="timeline-tags">
-          <span class="tag">Python</span>
-          <span class="tag">React</span>
-          <span class="tag">IoT</span>
-          <span class="tag">Mobile</span>
+
+        <div class="timeline-role tempo">
+          <div class="role-header">
+            <h4>Senior Full Stack Developer</h4>
+            <span class="period">Apr 2023 — Mar 2024</span>
+          </div>
+          <div class="role-domain">
+            <i class="fas fa-dumbbell"></i> Machine Learning Infrastructure
+          </div>
+          <ul class="role-bullets">
+            <li>Individual contributor on the ML team, automating CV configurations per exercise</li>
+            <li>Drive improvements to in-house ML models</li>
+            <li>Own all ML tooling, infrastructure, data labeling, and data analysis</li>
+          </ul>
+          <div class="role-tags">
+            <span class="tag">Python</span>
+            <span class="tag">AWS</span>
+            <span class="tag">S3</span>
+            <span class="tag">ML Infrastructure</span>
+          </div>
+        </div>
+
+        <div class="timeline-role tempo">
+          <div class="role-header">
+            <h4>Full Stack Developer</h4>
+            <span class="period">Apr 2021 — Apr 2023</span>
+          </div>
+          <div class="role-domain">
+            <i class="fas fa-dumbbell"></i> Machine Learning Tooling
+          </div>
+          <ul class="role-bullets">
+            <li>Built end-to-end tooling for the ML team: data collection, exploration, labeling, and analysis</li>
+            <li>Managed cloud compute infrastructure for model training</li>
+            <li>Built model management, deployment, and production monitoring pipelines</li>
+          </ul>
+          <div class="role-tags">
+            <span class="tag">Python</span>
+            <span class="tag">AWS</span>
+            <span class="tag">ML Pipelines</span>
+            <span class="tag">Cloud Infrastructure</span>
+          </div>
         </div>
       </div>
 
-      <div class="timeline-item aerospace">
-        <div class="timeline-header">
+      <!-- ── Aerospace ── -->
+      <div class="timeline-company">
+        <div class="company-header">
           <h3>The Aerospace Corporation</h3>
-          <span class="period">2015 — 2019</span>
+          <span class="location">Los Angeles, CA</span>
+          <span class="total-period">2015 — 2021</span>
         </div>
-        <div class="timeline-domain">
-          <i class="fas fa-satellite"></i> Aerospace & Defense
+
+        <div class="timeline-role aerospace">
+          <div class="role-header">
+            <h4>Sr. Web & Graphics Software Developer</h4>
+            <span class="period">Jun 2019 — Apr 2021</span>
+          </div>
+          <div class="role-domain">
+            <i class="fas fa-satellite"></i> Satellite Visualization
+          </div>
+          <ul class="role-bullets">
+            <li>Built web-based visualization and propagation tools for real-time satellite constellations</li>
+            <li>Built APIs and databases to consolidate authoritative sources of truth for satellite data</li>
+            <li>Led technical projects focused on web-based tooling</li>
+          </ul>
+          <div class="role-tags">
+            <span class="tag">TypeScript</span>
+            <span class="tag">JavaScript</span>
+            <span class="tag">WebGL</span>
+            <span class="tag">APIs</span>
+          </div>
         </div>
-        <div class="role">Modeling & Simulation Developer</div>
-        <ul class="timeline-bullets">
-          <li>Built simulation and modeling tools for satellite operations</li>
-          <li>Developed visualization systems for space mission planning</li>
-          <li>Worked on immersive technology and graphics software</li>
-        </ul>
-        <div class="timeline-tags">
-          <span class="tag">Python</span>
-          <span class="tag">OpenGL</span>
-          <span class="tag">Simulation</span>
-          <span class="tag">Data Pipeline</span>
+
+        <div class="timeline-role aerospace">
+          <div class="role-header">
+            <h4>Space Systems Engineer</h4>
+            <span class="period">Jul 2015 — Jun 2019</span>
+          </div>
+          <div class="role-domain">
+            <i class="fas fa-satellite"></i> Satellite Communications
+          </div>
+          <ul class="role-bullets">
+            <li>Extended state-of-the-art satellite communications analysis tools with Python</li>
+            <li>Built internal tooling and automation for analysis efforts and frameworks</li>
+            <li>Led corporate L&amp;D for Python</li>
+          </ul>
+          <div class="role-tags">
+            <span class="tag">Python</span>
+            <span class="tag">MATLAB</span>
+            <span class="tag">Simulation</span>
+            <span class="tag">Automation</span>
+          </div>
         </div>
       </div>
 
@@ -532,6 +645,17 @@
           <li>JavaScript / TypeScript</li>
           <li>C++</li>
           <li>SQL</li>
+          <li>MATLAB</li>
+        </ul>
+      </div>
+      <div class="skill-group">
+        <h4>ML & Data</h4>
+        <ul>
+          <li>Computer Vision</li>
+          <li>Machine Learning</li>
+          <li>Data Pipelines</li>
+          <li>Data Labeling</li>
+          <li>Model Deployment</li>
         </ul>
       </div>
       <div class="skill-group">
@@ -539,71 +663,18 @@
         <ul>
           <li>React</li>
           <li>Flask / Django</li>
-          <li>Vue.js</li>
           <li>ROS</li>
+          <li>Vue.js</li>
         </ul>
       </div>
       <div class="skill-group">
         <h4>Infrastructure</h4>
         <ul>
+          <li>AWS (S3, EC2)</li>
           <li>Docker</li>
           <li>CI/CD</li>
-          <li>AWS</li>
           <li>Git</li>
         </ul>
-      </div>
-      <div class="skill-group">
-        <h4>Databases</h4>
-        <ul>
-          <li>PostgreSQL</li>
-          <li>MongoDB</li>
-          <li>Neo4j</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Projects ── -->
-  <section class="section" id="projects">
-    <div class="section-label">Selected Work</div>
-
-    <div class="projects-grid">
-      <div class="project-card">
-        <div class="project-header">
-          <h4>HomeHub</h4>
-          <div class="project-links">
-            <a href="https://github.com/brycecoldcocacola/HomeHub"><i class="fab fa-github"></i> Code</a>
-          </div>
-        </div>
-        <p class="project-desc">
-          A smart home dashboard and calendar system running on a Raspberry Pi,
-          serving as the central hub for home automation and information display.
-        </p>
-        <div class="project-tags">
-          <span class="tag">Python</span>
-          <span class="tag">React</span>
-          <span class="tag">Raspberry Pi</span>
-          <span class="tag">Google Calendar API</span>
-        </div>
-      </div>
-
-      <div class="project-card">
-        <div class="project-header">
-          <h4>BarkWatch</h4>
-          <div class="project-links">
-            <a href="https://github.com/brycecoldcocacola/barkwatch"><i class="fab fa-github"></i> Code</a>
-          </div>
-        </div>
-        <p class="project-desc">
-          A machine learning system that listens for barking and distinguishes
-          real alerts from background noise, running on edge hardware.
-        </p>
-        <div class="project-tags">
-          <span class="tag">Python</span>
-          <span class="tag">TensorFlow</span>
-          <span class="tag">Audio ML</span>
-          <span class="tag">Edge Computing</span>
-        </div>
       </div>
     </div>
   </section>
