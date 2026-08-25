@@ -1,0 +1,34 @@
+.experience-card {
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  box-shadow: none;
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
+
+  .icon-circle {
+    border-radius: 2.5em;
+    width: 3em;
+    height: 3em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    svg {
+      color: #fff;
+      width: 1.5em;
+      height: 1.5em;
+    }
+
+    &.work {
+      background: var(--primary);
+    }
+  }
+
+  .exp-date {
+    font-size: 0.9rem;
+    color: var(--bs-secondary);
+  }
+}

@@ -1,7 +1,8 @@
-import { Container, Card, Col, Row } from "react-bootstrap";
+import { Container, Card, Col, Row, Button } from "react-bootstrap";
+import { Link } from "react-router-dom";
 import { VerticalTimeline, VerticalTimelineElement }  from 'react-vertical-timeline-component';
 import 'react-vertical-timeline-component/style.min.css';
-import { MdWork, MdSchool } from "react-icons/md"
+import { MdSchool } from "react-icons/md"
 import { SiPython, SiJavascript } from "react-icons/si";
 import { FaDatabase, FaEllipsisH } from "react-icons/fa";
 import Fade from 'react-reveal/Fade';
@@ -10,7 +11,7 @@ import "./About.scss";
 export default function About() {
   return (
     <Container className="about mb-3">
-      <h3 className="timeline-header mb-3">Education & Experience</h3>
+      <h3 className="timeline-header mb-3">Education</h3>
       <VerticalTimeline>
         <VerticalTimelineElement
           className="vertical-timeline-element--education"
@@ -27,20 +28,6 @@ export default function About() {
           </p>
         </VerticalTimelineElement>
         <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          contentStyle={{ border: '1px solid rgba(0,0,0,0.125)', "box-shadow": "none"}}
-          contentArrowStyle={{ borderRight: '7px solid rgba(0,0,0,0.125)' }}
-          iconStyle={{ background: 'var(--primary)', color: '#fff' }}
-          icon={<MdWork/>}
-          date="2015 - 2019"
-        >
-          <h3 className="vertical-timeline-element-title">Modeling & Simulation Developer</h3>
-          <p className="vertical-timeline-element-subtitle">
-            The Aerospace Corporation <br />
-            Modeling & Simulation Department
-          </p>
-        </VerticalTimelineElement>
-        <VerticalTimelineElement
           className="vertical-timeline-element--education"
           contentStyle={{ border: '1px solid rgba(0,0,0,0.125)', "box-shadow": "none"}}
           contentArrowStyle={{ borderRight: '7px solid rgba(0,0,0,0.125)' }}
@@ -54,21 +41,13 @@ export default function About() {
             University of California, Los Angeles
           </p>
         </VerticalTimelineElement>
-        <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          contentStyle={{ border: '1px solid rgba(0,0,0,0.125)', "box-shadow": "none"}}
-          contentArrowStyle={{ borderRight: '7px solid rgba(0,0,0,0.125)' }}
-          iconStyle={{ background: '#007bff', color: '#fff' }}
-          icon={<MdWork/>}
-          date="2016 - 2018"
-        >
-          <h3 className="vertical-timeline-element-title">Web & Graphics Software Developer</h3>
-          <p className="vertical-timeline-element-subtitle">
-            The Aerospace Corporation <br />
-            Visualization & Immersive Technology Department
-          </p>
-        </VerticalTimelineElement>
       </VerticalTimeline>
+      
+      <div className="text-center mt-3 mb-4">
+        <Link to="/experience">
+          <Button variant="outline-primary">View All Experience</Button>
+        </Link>
+      </div>
       
       <h3 className="mt-4 timeline-header mb-3">Skills</h3>
       <Row>

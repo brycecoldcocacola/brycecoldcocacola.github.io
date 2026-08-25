@@ -11,7 +11,7 @@ import "./App.scss"
 import Home from "./home/Home"
 const About = React.lazy(() => import('./about/About'));
 const Blog = React.lazy(() => import('./blog/Blog'));
-
+const Experiences = React.lazy(() => import('./experiences/Experiences'));
 export default function App() {
 
   const [cls, setClass] = useState("");
@@ -32,6 +32,7 @@ export default function App() {
             <Nav.Link eventKey="1" as={Link} to="/">Home</Nav.Link>
             <Nav.Link eventKey="2" as={Link} to="/about">About</Nav.Link>
             <Nav.Link eventKey="3" as={Link} to="/blog">Blog</Nav.Link>
+            <Nav.Link eventKey="4" as={Link} to="/experience">Experience</Nav.Link>
           </Nav>
         </Navbar.Collapse>
       </Navbar>
@@ -46,6 +47,12 @@ export default function App() {
             <Suspense fallback={<div>Loading...</div>}>
               <div className="p-4 m-1"></div>
               <Blog />
+            </Suspense>
+          </Route>
+          <Route path="/experience">
+            <Suspense fallback={<div>Loading...</div>}>
+              <div className="p-4 m-1"></div>
+              <Experiences />
             </Suspense>
           </Route>
           <Route path="/">
