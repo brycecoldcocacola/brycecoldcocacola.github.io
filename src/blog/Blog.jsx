@@ -1,11 +1,5 @@
-import { Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { Container, Row, Col, Card } from 'react-bootstrap';
-import {
-  Routes,
-  Route,
-  Link,
-  useParams
-} from "react-router-dom";
 import "./Blog.scss";
 
 const posts = {
@@ -43,63 +37,56 @@ const posts = {
 };
 
 export default function Blog() {
+  const [selectedPost, setSelectedPost] = useState(null);
+
   return (
     <Container className="Blog">
-      <Routes>
-        <Route path=":postId" element={
+      {selectedPost ? (
+        <>
+          <button className="btn btn-sm btn-outline-secondary mb-3" onClick={() => setSelectedPost(null)}>
+            &larr; Back to posts
+          </button>
           <Suspense fallback={<div>Loading...</div>}>
-            <FetchPost />
+            {posts[selectedPost]?.article && React.createElement(posts[selectedPost].article)}
           </Suspense>
-        } />
-        <Route path="" element={
-          <>
-            <Row>
-              <Col>
-                <h3>Posts</h3>
-              </Col>
-            </Row>
-            <div className="fade-in">
-              <div>
-                {Object.keys(posts).map((key) => {
-                  return (
-                    <Row key={key} className='mb-3'>
-                      <Col>
-                        <Card>
-                          <Card.Body>
-                            <Link to={key}>
-                              <Card.Title>
-                                {posts[key].name}
-                              </Card.Title>
-                            </Link>
-                            <Card.Subtitle>
-                              {posts[key].date}
-                            </Card.Subtitle>
-                            <Card.Text>
-                              {posts[key].description}
-                            </Card.Text>
-                          </Card.Body>
-                          <Card.Footer>
-                            {posts[key].tags.map((tag) => {
-                              return <small key={tag} className="text-muted">#{tag}</small>
-                            })}
-                          </Card.Footer>
-                        </Card>
-                      </Col>
-                    </Row>
-                  )
-                })}
-              </div>
+        </>
+      ) : (
+        <>
+          <Row>
+            <Col>
+              <h3>Posts</h3>
+            </Col>
+          </Row>
+          <div className="fade-in">
+            <div>
+              {Object.keys(posts).map((key) => (
+                <Row key={key} className='mb-3'>
+                  <Col>
+                    <Card>
+                      <Card.Body>
+                        <Card.Title onClick={() => setSelectedPost(key)} style={{ cursor: 'pointer' }}>
+                          {posts[key].name}
+                        </Card.Title>
+                        <Card.Subtitle>
+                          {posts[key].date}
+                        </Card.Subtitle>
+                        <Card.Text>
+                          {posts[key].description}
+                        </Card.Text>
+                      </Card.Body>
+                      <Card.Footer>
+                        {posts[key].tags.map((tag) => (
+                          <small key={tag} className="text-muted">#{tag}</small>
+                        ))}
+                      </Card.Footer>
+                    </Card>
+                  </Col>
+                </Row>
+              ))}
             </div>
-          </>
-        } />
-      </Routes>
+          </div>
+        </>
+      )}
     </Container>
   );
-}
-
-function FetchPost() {
-  const { postId } = useParams();
-  const Post = posts[postId]?.article;
-  if (!Post) return <p>Post not found.</p>;
-  return <Post />;
 }

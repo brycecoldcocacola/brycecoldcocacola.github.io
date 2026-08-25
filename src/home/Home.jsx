@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Container, Row, Col, Image, Button } from "react-bootstrap";
 import Avatar from "./avatar-removebg-min.png";
-import { Link } from "react-router-dom";
 import "./Home.scss";
 
 export default function Home() {
@@ -14,9 +13,9 @@ export default function Home() {
         <Col xs={12} lg={6} className="d-flex flex-column align-items-center align-items-lg-start align-self-center mt-5 mb-2">
           <h1>Hello, I'm Bryce</h1>
           <p>Web & Software Developer</p>
-          <Link to="/about">
+          <a href="#about">
             <Button>About Me</Button>
-          </Link>
+          </a>
         </Col>
         <Col xs={12} lg={6} className="h-100 overflow-hidden">
           <div className="fade-right">

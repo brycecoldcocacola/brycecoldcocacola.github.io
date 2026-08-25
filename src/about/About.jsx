@@ -1,5 +1,4 @@
 import { Container, Card, Col, Row, Button } from "react-bootstrap";
-import { Link } from "react-router-dom";
 import { VerticalTimeline, VerticalTimelineElement }  from 'react-vertical-timeline-component';
 import 'react-vertical-timeline-component/style.min.css';
 import { MdSchool } from "react-icons/md";
@@ -43,9 +42,9 @@ export default function About() {
       </VerticalTimeline>
 
       <div className="text-center mt-3 mb-4">
-        <Link to="/experience">
+        <a href="#experience">
           <Button variant="outline-primary">View All Experience</Button>
-        </Link>
+        </a>
       </div>
 
       <h3 className="mt-4 timeline-header mb-3">Skills</h3>
