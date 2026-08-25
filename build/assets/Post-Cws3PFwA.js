@@ -1,4 +1,4 @@
-import{j as e}from"./index-BAlual37.js";import{h as t,d as o}from"./docco-Da8gSBIh.js";import{A as n}from"./Alert-Dzru-Rds.js";const i={name:"How Python Imports Packages",date:"Dec 12 2020"},s=`
+import{j as e}from"./index-C66tZTsH.js";import{h as t,d as o}from"./docco-CvkYq_QW.js";import{A as n}from"./Alert-_AallrMY.js";const i={name:"How Python Imports Packages",date:"Dec 12 2020"},s=`
 import matplotlib
 `.trim(),r=`
 import sys

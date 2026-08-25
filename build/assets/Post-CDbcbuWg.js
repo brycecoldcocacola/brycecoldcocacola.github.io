@@ -1,4 +1,4 @@
-import{j as e}from"./index-BAlual37.js";import{h as t,d as s}from"./docco-Da8gSBIh.js";const n={name:"Physical Units in Python: Part 1 - Emulating Python Primitives",date:"Dec 17 2020"},i=`
+import{j as e}from"./index-C66tZTsH.js";import{h as t,d as s}from"./docco-CvkYq_QW.js";const n={name:"Physical Units in Python: Part 1 - Emulating Python Primitives",date:"Dec 17 2020"},i=`
 class MyNumber:
     def __init__(self, value, units=None):
         self._value = value
