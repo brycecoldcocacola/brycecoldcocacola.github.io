@@ -4,11 +4,7 @@
   --bs-body-bg: #fff;
 }
 
-:root, [data-bs-theme="light"] {
-  --bs-body-bg: #fff;
-}
-
-:root, [data-bs-theme="dark"] {
+[data-bs-theme="dark"] {
   --bs-body-bg: #000;
 }
 
