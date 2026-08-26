@@ -1,22 +1,19 @@
-import React, { Suspense } from "react";
 import "./App.scss";
 
 import Home from "./home/Home";
-const About = React.lazy(() => import('./about/About'));
-const Experiences = React.lazy(() => import('./experiences/Experiences'));
+import ParallelDomain from "./parallel-domain/ParallelDomain";
+import Tempo from "./tempo/Tempo";
+import Aerospace from "./aerospace/Aerospace";
+import Education from "./education/Education";
 
 export default function App() {
   return (
-    <>
-      <div className="app-scroll">
-        <Home />
-        <Suspense fallback={<div className="p-4 text-center">Loading...</div>}>
-          <About />
-        </Suspense>
-        <Suspense fallback={<div className="p-4 text-center">Loading...</div>}>
-          <Experiences />
-        </Suspense>
-      </div>
-    </>
+    <div className="app-scroll">
+      <Home />
+      <ParallelDomain />
+      <Tempo />
+      <Aerospace />
+      <Education />
+    </div>
   );
 }

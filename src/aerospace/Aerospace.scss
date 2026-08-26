@@ -1,0 +1,34 @@
+.aerospace {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .section-title {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .section-subtitle {
+    color: var(--bs-secondary);
+    font-size: 1.2rem;
+  }
+
+  .role-card {
+    border-left: 4px solid var(--primary);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    background: rgba(0, 123, 255, 0.05);
+    
+    h5 {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .role-date {
+      color: var(--bs-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+  }
+}

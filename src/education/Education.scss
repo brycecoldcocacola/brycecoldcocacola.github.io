@@ -1,0 +1,42 @@
+.education {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .section-title {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .degree-card {
+    border-left: 4px solid var(--success);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    background: rgba(40, 167, 69, 0.05);
+    
+    h5 {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .degree-date {
+      color: var(--bs-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .degree-field {
+      font-style: italic;
+      color: var(--bs-gray-600);
+    }
+  }
+
+  .skills-section {
+    margin-top: 3rem;
+    
+    h4 {
+      margin-bottom: 1.5rem;
+    }
+  }
+}

@@ -1,0 +1,16 @@
+.tempo {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .section-title {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .section-subtitle {
+    color: var(--bs-secondary);
+    font-size: 1.2rem;
+  }
+}
