@@ -4,7 +4,7 @@ import './Aerospace.scss';
 export default function Aerospace() {
   return (
     <section id="aerospace" className="aerospace">
-      {/* Three.js sticky background */}
+      {/* Fixed Three.js background */}
       <div className="orbit-background">
         <SatelliteOrbit />
       </div>
