@@ -1,7 +1,7 @@
 .aerospace {
-  /* Make this section tall enough for scrolling */
+  /* Tall enough for orbit + content, no excess whitespace */
   position: relative;
-  min-height: 200vh;
+  min-height: 150vh;
 
   /* Three.js background — stays anchored, content scrolls over it */
   .orbit-background {
