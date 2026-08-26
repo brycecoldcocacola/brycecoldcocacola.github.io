@@ -1,7 +1,7 @@
 .aerospace {
-  /* Tall enough for orbit + content, no excess whitespace */
+  /* Single viewport — orbit fills background, content overlays on top */
   position: relative;
-  min-height: 150vh;
+  height: 100vh;
 
   /* Three.js background — stays anchored, content scrolls over it */
   .orbit-background {
