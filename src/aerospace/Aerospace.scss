@@ -1,13 +1,14 @@
 .aerospace {
+  /* Make this section tall enough for scrolling */
   position: relative;
-  min-height: 100vh;
+  min-height: 200vh;
 
-  /* Fixed Three.js background — always visible */
+  /* Three.js background — stays anchored, content scrolls over it */
   .orbit-background {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
+    width: 100%;
     height: 100vh;
     z-index: 0;
 
@@ -30,7 +31,6 @@
     z-index: 1;
     padding-top: 5vh;
     padding-bottom: 4rem;
-    min-height: 100vh;
   }
 
   .section-title {
