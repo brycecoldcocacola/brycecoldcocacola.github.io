@@ -1,3 +1,5 @@
+import React from 'react';
+
 export const experiences = {
   'modeling-simulation': {
     name: 'Modeling & Simulation Developer',
