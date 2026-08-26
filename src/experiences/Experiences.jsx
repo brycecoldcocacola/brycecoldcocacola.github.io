@@ -1,52 +1,60 @@
-import React, { useState, Suspense } from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import React from 'react';
+import { Container, Row, Col, Card } from 'react-bootstrap';
 import { MdWork } from 'react-icons/md';
 import './Experiences.scss';
-import { experiences } from './data';
+import SatelliteOrbit from './SatelliteOrbit';
 
 export default function Experiences() {
-  const [selectedExp, setSelectedExp] = useState(null);
-
   return (
-    <Container className="experiences">
-      <h3 className="timeline-header mb-4">Experience</h3>
-      {selectedExp ? (
-        <>
-          <Button variant="outline-secondary" size="sm" className="mb-3" onClick={() => setSelectedExp(null)}>
-            &larr; Back to experiences
-          </Button>
-          <Suspense fallback={<div>Loading...</div>}>
-            {experiences[selectedExp]?.article && React.createElement(experiences[selectedExp].article)}
-          </Suspense>
-        </>
-      ) : (
-        <Row>
-          {Object.entries(experiences).map(([slug, exp]) => (
-            <Col xs={12} md={6} key={slug} className="mb-4">
-              <div className="fade-in">
-                <Card className="experience-card h-100">
-                  <Card.Body>
-                    <Card.Title className="d-flex align-items-center gap-2">
-                      <div className="icon-circle work">
-                        <MdWork />
-                      </div>
-                      <span>{exp.name}</span>
-                    </Card.Title>
-                    <Card.Subtitle className="mb-2 text-muted">
-                      {exp.org} &mdash; {exp.dept}
-                    </Card.Subtitle>
-                    <Card.Text className="exp-date">{exp.date}</Card.Text>
-                    <Card.Text>{exp.description}</Card.Text>
-                    <Button variant="outline-primary" size="sm" onClick={() => setSelectedExp(slug)}>
-                      View Details
-                    </Button>
-                  </Card.Body>
-                </Card>
-              </div>
-            </Col>
-          ))}
+    <section id="experience" className="experiences-section">
+      {/* Three.js sticky background */}
+      <div className="orbit-background">
+        <SatelliteOrbit />
+      </div>
+
+      <Container className="experiences-content">
+        <h3 className="timeline-header mb-4">Experience</h3>
+
+        <Row className="g-4">
+          {/* Aerospace Corporation - Modeling & Simulation */}
+          <Col xs={12}>
+            <Card className="experience-card timeline-card">
+              <Card.Body className="d-flex flex-column flex-md-row gap-3 align-items-start">
+                <div className="icon-circle work">
+                  <MdWork />
+                </div>
+                <div className="flex-grow-1">
+                  <Card.Title className="mb-1">Modeling & Simulation Developer</Card.Title>
+                  <Card.Subtitle className="mb-2 text-muted">
+                    The Aerospace Corporation &mdash; Modeling &amp; Simulation Department
+                  </Card.Subtitle>
+                  <Card.Text className="exp-date mb-3">2015 - 2019</Card.Text>
+                  <Card.Text>{'Developed modeling and simulation tools for aerospace systems analysis.'}</Card.Text>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+
+          {/* Aerospace Corporation - Web & Graphics */}
+          <Col xs={12}>
+            <Card className="experience-card timeline-card">
+              <Card.Body className="d-flex flex-column flex-md-row gap-3 align-items-start">
+                <div className="icon-circle work">
+                  <MdWork />
+                </div>
+                <div className="flex-grow-1">
+                  <Card.Title className="mb-1">Web &amp; Graphics Software Developer</Card.Title>
+                  <Card.Subtitle className="mb-2 text-muted">
+                    The Aerospace Corporation &mdash; Visualization &amp; Immersive Technology Department
+                  </Card.Subtitle>
+                  <Card.Text className="exp-date mb-3">2016 - 2018</Card.Text>
+                  <Card.Text>{'Built web-based visualization and graphics software for immersive technology.'}</Card.Text>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
         </Row>
-      )}
-    </Container>
+      </Container>
+    </section>
   );
 }

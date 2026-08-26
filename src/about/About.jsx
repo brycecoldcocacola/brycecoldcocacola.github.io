@@ -41,12 +41,6 @@ export default function About() {
         </VerticalTimelineElement>
       </VerticalTimeline>
 
-      <div className="text-center mt-3 mb-4">
-        <a href="#experience">
-          <Button variant="outline-primary">View All Experience</Button>
-        </a>
-      </div>
-
       <h3 className="mt-4 timeline-header mb-3">Skills</h3>
       <Row>
         <Col xs={6} lg={3} className="child-h-100">

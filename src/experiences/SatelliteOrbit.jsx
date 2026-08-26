@@ -1,16 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import './SatelliteOrbit.scss';
 
-export default function SatelliteOrbit() {
+export default function SatelliteOrbit({ className = '' }) {
   const mountRef = useRef(null);
-  const [loaded, setLoaded] = useState(false);
+  const animRef = useRef();
 
   useEffect(() => {
     if (!mountRef.current) return;
 
-    const width = mountRef.current.clientWidth;
-    const height = Math.max(300, Math.min(width * 0.6, 500));
+    const container = mountRef.current;
+    const width = container.clientWidth || window.innerWidth;
+    const height = container.clientHeight || window.innerHeight;
 
     // Scene
     const scene = new THREE.Scene();
@@ -24,7 +24,7 @@ export default function SatelliteOrbit() {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    mountRef.current.appendChild(renderer.domElement);
+    container.appendChild(renderer.domElement);
 
     // Lights
     const ambientLight = new THREE.AmbientLight(0x333344, 0.6);
@@ -39,14 +39,14 @@ export default function SatelliteOrbit() {
     scene.add(rimLight);
 
     // Stars
-    const starCount = 800;
+    const starCount = 1200;
     const starGeo = new THREE.BufferGeometry();
     const starPositions = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount * 3; i++) {
-      starPositions[i] = (Math.random() - 0.5) * 100;
+      starPositions[i] = (Math.random() - 0.5) * 120;
     }
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.08, sizeAttenuation: true });
+    const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.06, sizeAttenuation: true });
     scene.add(new THREE.Points(starGeo, starMat));
 
     // Earth
@@ -62,7 +62,7 @@ export default function SatelliteOrbit() {
     const earth = new THREE.Mesh(earthGeo, earthMat);
     earthGroup.add(earth);
 
-    // Continents hint — slightly larger green spheres clustered
+    // Continents hint
     const continentMat = new THREE.MeshPhongMaterial({
       color: 0x33aa55,
       emissive: 0x113311,
@@ -93,7 +93,7 @@ export default function SatelliteOrbit() {
 
     scene.add(earthGroup);
 
-    // Orbit ring (subtle)
+    // Orbit ring
     const orbitRadius = 3;
     const orbitCurve = new THREE.EllipseCurve(0, 0, orbitRadius, orbitRadius, 0, 2 * Math.PI, false, 0);
     const orbitPoints = orbitCurve.getPoints(128);
@@ -106,13 +106,10 @@ export default function SatelliteOrbit() {
     // Satellite
     const satGroup = new THREE.Group();
 
-    // Body
     const satBodyGeo = new THREE.BoxGeometry(0.12, 0.12, 0.18);
     const satBodyMat = new THREE.MeshPhongMaterial({ color: 0xcccccc, shininess: 80 });
-    const satBody = new THREE.Mesh(satBodyGeo, satBodyMat);
-    satGroup.add(satBody);
+    satGroup.add(new THREE.Mesh(satBodyGeo, satBodyMat));
 
-    // Solar panels
     const panelGeo = new THREE.BoxGeometry(0.35, 0.01, 0.1);
     const panelMat = new THREE.MeshPhongMaterial({ color: 0x2233aa, emissive: 0x112266, emissiveIntensity: 0.2 });
     const panelL = new THREE.Mesh(panelGeo, panelMat);
@@ -122,36 +119,19 @@ export default function SatelliteOrbit() {
     panelR.position.x = 0.22;
     satGroup.add(panelR);
 
-    // Antenna
-    const antennaGeo = new THREE.CylinderGeometry(0.005, 0.005, 0.15);
-    const antennaMat = new THREE.MeshPhongMaterial({ color: 0x888888 });
-    const antenna = new THREE.Mesh(antennaGeo, antennaMat);
-    antenna.position.y = 0.12;
-    satGroup.add(antenna);
-    const dishGeo = new THREE.SphereGeometry(0.04, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2);
-    const dish = new THREE.Mesh(dishGeo, antennaMat);
-    dish.position.y = 0.2;
-    dish.rotation.x = Math.PI;
-    satGroup.add(dish);
-
     scene.add(satGroup);
 
     // Animation
-    let animationId;
     let prevTime = performance.now();
 
     function animate() {
-      animationId = requestAnimationFrame(animate);
-
+      animRef.current = requestAnimationFrame(animate);
       const time = (performance.now() - prevTime) / 1000;
       prevTime = performance.now();
 
-      // Rotate earth slowly
       earthGroup.rotation.y += time * 0.08;
 
-      // Orbit satellite
       const angle = time * 0.5;
-      const tilt = Math.PI * 0.15;
       satGroup.position.x = Math.cos(angle) * orbitRadius;
       satGroup.position.z = Math.sin(angle) * orbitRadius;
       satGroup.position.y = Math.sin(angle * 2) * 0.15;
@@ -161,24 +141,41 @@ export default function SatelliteOrbit() {
     }
 
     animate();
-    setLoaded(true);
 
-    // Handle resize
+    // Resize handler
     const handleResize = () => {
-      if (!mountRef.current) return;
-      const w = mountRef.current.clientWidth;
-      const h = Math.max(300, Math.min(w * 0.6, 500));
+      if (!container) return;
+      const w = container.clientWidth || window.innerWidth;
+      const h = container.clientHeight || window.innerHeight;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     };
     window.addEventListener('resize', handleResize);
 
+    // Intersection observer to pause when off-screen
+    let visible = true;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!visible && entries[0].isIntersecting) {
+          animate();
+          visible = true;
+        } else if (visible && !entries[0].isIntersecting) {
+          cancelAnimationFrame(animRef.current);
+          animRef.current = null;
+          visible = false;
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(container);
+
     return () => {
-      cancelAnimationFrame(animationId);
+      if (animRef.current) cancelAnimationFrame(animRef.current);
       window.removeEventListener('resize', handleResize);
-      if (mountRef.current && renderer.domElement.parentNode === mountRef.current) {
-        mountRef.current.removeChild(renderer.domElement);
+      observer.disconnect();
+      if (container && renderer.domElement.parentNode === container) {
+        container.removeChild(renderer.domElement);
       }
       renderer.dispose();
       earthGeo.dispose();
@@ -187,19 +184,10 @@ export default function SatelliteOrbit() {
       atmosMat.dispose();
       starGeo.dispose();
       starMat.dispose();
-      satBodyGeo.dispose();
-      satBodyMat.dispose();
-      panelGeo.dispose();
-      panelMat.dispose();
-      antennaGeo.dispose();
-      antennaMat.dispose();
-      dishGeo.dispose();
     };
   }, []);
 
   return (
-    <div className="satellite-orbit" ref={mountRef}>
-      {!loaded && <div className="orbit-loading">Loading visualization...</div>}
-    </div>
+    <div className={`satellite-orbit ${className}`} ref={mountRef} />
   );
 }
