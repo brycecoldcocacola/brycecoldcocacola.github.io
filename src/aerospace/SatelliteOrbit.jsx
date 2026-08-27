@@ -170,16 +170,6 @@ vec3 getTerrainColor(float elevation, vec2 uv, float latAbs) {
   return base;
 }
 
-// Vertex shader passes through normal for fragment processing
-varying vec3 vNormal;
-varying vec2 vUv;
-void main() {
-  vNormal = normalize(normalMatrix * normal);
-  vUv = uv;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}
-
-// ── Earth surface shader ──
 const earthVertexShader = `
 varying vec3 vWorldPos;
 varying vec2 vUv;
