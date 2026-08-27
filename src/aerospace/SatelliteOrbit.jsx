@@ -169,6 +169,7 @@ vec3 getTerrainColor(float elevation, vec2 uv, float latAbs) {
   
   return base;
 }
+`;
 
 const earthVertexShader = `
 varying vec3 vWorldPos;
