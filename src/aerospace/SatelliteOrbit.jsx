@@ -1,6 +1,274 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
+// Simplex-like 3D noise for GLSL (simplified)
+const noiseGLSL = `
+vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+
+float snoise(vec3 v) {
+  const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+  const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+
+  // First corner
+  vec3 i  = floor(v + dot(v, C.yyy));
+  vec3 x0 = v - i + dot(i, C.xxx);
+
+  // Other corners
+  vec3 g = step(x0.yzx, x0.xyz);
+  vec3 l = 1.0 - g;
+  vec3 i1 = min(g.xyz, l.zxy);
+  vec3 i2 = max(g.xyz, l.zxy);
+
+  vec3 x1 = x0 - i1 + C.xxx;
+  vec3 x2 = x0 - i2 + C.yyy;
+  vec3 x3 = x0 - D.yyy;
+
+  // Permutations
+  i = mod289(i);
+  vec4 p = permute(permute(permute(
+    i.z + vec4(0.0, i1.z, i2.z, 1.0))
+    + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+    + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+
+  // Gradients: 7x7 points over a square, mapped onto an octahedron.
+  // The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)
+  float n_ = 0.142857142857; // 1.0/7.0
+  vec3 ns = n_ * D.wyz - D.xzx;
+
+  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  // mod(p,7*7)
+
+  vec4 x_ = floor(j * ns.z);
+  vec4 y_ = floor(j - 7.0 * x_);    // mod(j,N)
+
+  vec4 x = x_ * ns.x + ns.yyyy;
+  vec4 y = y_ * ns.x + ns.yyyy;
+  vec4 h = 1.0 - abs(x) - abs(y);
+
+  vec4 b0 = vec4(x.xy, y.xy);
+  vec4 b1 = vec4(x.zw, y.zw);
+
+  vec4 s0 = floor(b0)*2.0 + 1.0;
+  vec4 s1 = floor(b1)*2.0 + 1.0;
+  vec4 sh = -step(h, vec4(0.0));
+
+  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+
+  vec3 p0 = vec3(a0.xy,h.x);
+  vec3 p1 = vec3(a0.zw,h.y);
+  vec3 p2 = vec3(a1.xy,h.z);
+  vec3 p3 = vec3(a1.zw,h.w);
+
+  //Normalise gradients
+  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+  p0 *= norm.x;
+  p1 *= norm.y;
+  p2 *= norm.z;
+  p3 *= norm.w;
+
+  // Mix final noise value
+  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+  m = m * m;
+  return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+}
+
+// Fractal Brownian Motion for layered detail
+float fbm(vec3 p) {
+  float value = 0.0;
+  float amplitude = 0.5;
+  float frequency = 1.0;
+  
+  // Layer 1: Large continent-scale features
+  value += snoise(p * frequency) * amplitude;
+  frequency *= 2.0;
+  amplitude *= 0.5;
+  
+  // Layer 2: Medium detail (peninsulas, bays)
+  value += snoise(p * frequency) * amplitude;
+  frequency *= 2.0;
+  amplitude *= 0.5;
+  
+  // Layer 3: Fine detail (coastal irregularities)
+  value += snoise(p * frequency) * amplitude;
+  frequency *= 2.0;
+  amplitude *= 0.25;
+  
+  return value;
+}
+
+float cloudNoise(vec2 uv, float time) {
+  vec3 p = vec3(uv * 4.0, time * 0.02);
+  float n = snoise(p) * 0.6;
+  n += snoise(p * 2.0 + 17.0) * 0.3;
+  n += snoise(p * 4.0 + 37.0) * 0.1;
+  
+  // Shape into cloud-like patterns
+  float mask = smoothstep(-0.1, 0.5, n);
+  return mask;
+}
+
+float coastNoise(vec2 uv) {
+  vec3 p = vec3(uv * 6.0 + vec2(7.0, 13.0));
+  float n = snoise(p) * 0.4;
+  n += snoise(p * 3.0 + 5.0) * 0.3;
+  n += snoise(p * 7.0 + 19.0) * 0.2;
+  return smoothstep(-0.15, 0.3, n);
+}
+
+// Latitude-based features (ice caps)
+float latitudeFeature(float y) {
+  float absY = abs(y);
+  // Ice caps at high latitudes (> ~70 degrees, i.e., > 0.95 on sphere)
+  float ice = smoothstep(0.88, 1.0, absY);
+  return ice;
+}
+
+// Elevation-based coloring helper
+vec3 getTerrainColor(float elevation, vec2 uv, float latAbs) {
+  // Ocean (low elevation)
+  if (elevation < -0.05) {
+    // Deep ocean gets slightly darker at poles
+    float depth = smoothstep(-0.4, 0.0, elevation);
+    vec3 deepOcean = vec3(0.02, 0.08, 0.25);
+    vec3 shallowWater = vec3(0.12, 0.28, 0.52);
+    return mix(deepOcean, shallowWater, depth);
+  }
+  
+  // Land
+  float landElev = smoothstep(-0.05, 0.3, elevation);
+  
+  vec3 greenLowland = vec3(0.18, 0.38, 0.15);    // Lush lowlands (tropics)
+  vec3 brownHighland = vec3(0.45, 0.38, 0.22);   // Highland/temperate
+  vec3 desertColor = vec3(0.76, 0.66, 0.43);     // Desert (dry zones)
+  vec3 snowHighland = vec3(0.85, 0.85, 0.88);    // Mountain tops
+  
+  // Base land color based on latitude and elevation
+  vec3 base;
+  if (latAbs < 0.4) {
+    // Tropics: mostly green
+    base = mix(greenLowland, brownHighland, landElev * 0.7);
+    // Some desert near tropics edges
+    float dryness = smoothstep(0.25, 0.5, latAbs) * (1.0 - smoothstep(0.4, 0.6, latAbs));
+    base = mix(base, desertColor, dryness * 0.3);
+  } else if (latAbs < 0.7) {
+    // Temperate: green to brown
+    float tempGreen = smoothstep(0.5, 0.8, 1.0 - latAbs);
+    base = mix(greenLowland * 0.9 + vec3(0.1, 0.05, 0.0), brownHighland, 1.0 - tempGreen);
+  } else {
+    // Polar: brown to snow
+    float polarFactor = smoothstep(0.7, 0.95, latAbs);
+    base = mix(brownHighland * 0.6 + vec3(-0.02, 0.01, -0.02), snowHighland, polarFactor);
+  }
+  
+  // Add elevation detail
+  float detail = smoothstep(0.15, 0.4, elevation);
+  base = mix(base, snowHighland * 0.7 + vec3(0.1, 0.08, 0.05), detail * 0.6);
+  
+  return base;
+}
+
+// Vertex shader passes through normal for fragment processing
+varying vec3 vNormal;
+varying vec2 vUv;
+void main() {
+  vNormal = normalize(normalMatrix * normal);
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+
+// ── Earth surface shader ──
+const earthVertexShader = `
+varying vec3 vWorldPos;
+varying vec2 vUv;
+void main() {
+  vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+const earthFragmentShader = `
+varying vec3 vNormal;
+varying vec2 vUv;
+uniform float uTime;
+
+${noiseGLSL}
+
+void main() {
+  // Convert UV to a point on the sphere for noise (avoids pole artifacts)
+  vec3 norm = normalize(vNormal);
+  
+  // FBM for continent shapes
+  float elevation = fbm(norm * 1.2 + vec3(0.5, 0.2, 0.8));
+  
+  // Blend between two noise layers to create more realistic coastlines
+  float e2 = fbm(norm * 1.2 + vec3(-0.3, 0.7, 1.2));
+  elevation = mix(elevation, e2, 0.4);
+  
+  // Latitude for ice caps and climate zones
+  float latAbs = abs(vNormal.y);
+  
+  // Get terrain color based on elevation and latitude
+  vec3 surfaceColor = getTerrainColor(elevation, vUv, latAbs);
+  
+  // Apply ice cap overlay
+  float iceCap = latitudeFeature(norm.y);
+  vec3 iceColor = vec3(0.92, 0.94, 0.96);
+  surfaceColor = mix(surfaceColor, iceColor, iceCap);
+  
+  // Add subtle specular for ocean (water reflection)
+  float isOcean = smoothstep(-0.1, -0.05, elevation);
+  vec3 lightDir = normalize(vec3(8.0, 4.0, 6.0));
+  vec3 viewDir = normalize(cameraPosition - vWorldPos);
+  vec3 halfDir = normalize(lightDir + viewDir);
+  float spec = pow(max(dot(normalize(vNormal), halfDir), 0.0), 40.0);
+  surfaceColor += vec3(0.3, 0.35, 0.4) * spec * isOcean;
+  
+  // Subtle ambient occlusion at edges (Fresnel darkening on the terminator side)
+  float terminator = dot(normalize(vNormal), normalize(vec3(-1.0, -0.2, -0.8)));
+  float shadow = smoothstep(0.0, -0.5, terminator);
+  surfaceColor *= mix(1.0, 0.4, shadow);
+  
+  gl_FragColor = vec4(surfaceColor, 1.0);
+}
+`;
+
+// ── Cloud shader ──
+const cloudVertexShader = `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+const cloudFragmentShader = `
+varying vec2 vUv;
+uniform float uTime;
+
+${noiseGLSL}
+
+void main() {
+  // Create swirling cloud patterns using layered noise
+  vec3 p = vec3(vUv * 4.5, uTime * 0.015);
+  
+  float n = snoise(p) * 0.6;
+  n += snoise(p * 2.0 + vec3(7.0, 3.0, 0.0)) * 0.3;
+  n += snoise(p * 4.0 + vec3(13.0, 5.0, 0.0)) * 0.1;
+  
+  // Shape into realistic cloud formations
+  float cloud = smoothstep(0.05, 0.5, n);
+  
+  // Fade near poles (less cloud cover in polar regions)
+  float latFade = smoothstep(0.9, 0.7, abs(vUv.y - 0.5));
+  
+  gl_FragColor = vec4(1.0, 1.0, 1.0, cloud * 0.35 * latFade);
+}
+`;
+
 export default function SatelliteOrbit() {
   const mountRef = useRef(null);
   const animRef = useRef();
@@ -28,18 +296,6 @@ export default function SatelliteOrbit() {
     renderer.toneMappingExposure = 1.0;
     container.appendChild(renderer.domElement);
 
-    // ── Lights ──
-    const ambientLight = new THREE.AmbientLight(0x223344, 0.4);
-    scene.add(ambientLight);
-
-    const sunLight = new THREE.DirectionalLight(0xffeedd, 2.5);
-    sunLight.position.set(8, 4, 6);
-    scene.add(sunLight);
-
-    const fillLight = new THREE.DirectionalLight(0x334466, 0.15);
-    fillLight.position.set(-5, -2, -4);
-    scene.add(fillLight);
-
     // ── Stars ──
     const starCount = 3000;
     const starGeo = new THREE.BufferGeometry();
@@ -58,118 +314,29 @@ export default function SatelliteOrbit() {
     });
     scene.add(new THREE.Points(starGeo, starMat));
 
-    // ── Helpers ──
-    function latLonToVec3(lat, lon, radius) {
-      const phi = (90 - lat) * Math.PI / 180;
-      const theta = (lon + 180) * Math.PI / 180;
-      return new THREE.Vector3(
-        -radius * Math.sin(phi) * Math.cos(theta),
-        radius * Math.cos(phi),
-        radius * Math.sin(phi) * Math.sin(theta)
-      );
-    }
-
-    // ── Earth Group ──
+    // ── Earth with procedural shader (realistic continents!) ──
     const earthGroup = new THREE.Group();
 
-    // Ocean sphere
+    // Procedural Earth sphere using custom shader
     const earthGeo = new THREE.SphereGeometry(2, 128, 64);
-    const oceanMat = new THREE.MeshPhongMaterial({
-      color: 0x1a5276, emissive: 0x0a1f33, emissiveIntensity: 0.1, shininess: 30, specular: 0x4488aa,
+    const earthMat = new THREE.ShaderMaterial({
+      vertexShader: earthVertexShader,
+      fragmentShader: earthFragmentShader,
+      uniforms: { uTime: { value: 0 } },
     });
-    earthGroup.add(new THREE.Mesh(earthGeo, oceanMat));
+    earthGroup.add(new THREE.Mesh(earthGeo, earthMat));
 
-    // ── Continent patches (flat rings on sphere surface) ──
-    const landMat = new THREE.MeshPhongMaterial({
-      color: 0x3a7a35, emissive: 0x112211, emissiveIntensity: 0.05, transparent: true, opacity: 0.9, side: THREE.DoubleSide,
+    // Cloud layer (also procedural shader)
+    const cloudGeo = new THREE.SphereGeometry(2.06, 64, 32);
+    const cloudMat = new THREE.ShaderMaterial({
+      vertexShader: cloudVertexShader,
+      fragmentShader: cloudFragmentShader,
+      uniforms: { uTime: { value: 0 } },
+      transparent: true,
+      depthWrite: false,
     });
-
-    // Each continent: [lat center, lon center, radius on sphere, shape roughness]
-    const continents = [
-      // North America (spread out properly)
-      { lat: 50, lon: -100, r: 0.7 },   // Central NA
-      { lat: 40, lon: -80, r: 0.35 },   // Eastern US
-      { lat: 65, lon: -140, r: 0.4 },   // Western Canada/Alaska
-      { lat: 25, lon: -100, r: 0.3 },   // Mexico
-      { lat: 18, lon: -75, r: 0.15 },   // Caribbean
-
-      // South America
-      { lat: -5, lon: -60, r: 0.45 },   // Northern SA (Brazil)
-      { lat: -20, lon: -55, r: 0.35 },  // Eastern Brazil
-      { lat: -35, lon: -70, r: 0.3 },   // Southern Chile/Argentina
-      { lat: -10, lon: -78, r: 0.2 },   // Western SA (Peru/Ecuador)
-
-      // Europe
-      { lat: 50, lon: 10, r: 0.3 },     // Central Europe
-      { lat: 60, lon: 15, r: 0.2 },     // Scandinavia
-      { lat: 40, lon: -5, r: 0.15 },    // Iberian Peninsula
-
-      // Africa
-      { lat: 5, lon: 20, r: 0.4 },      // Central Africa
-      { lat: 20, lon: 10, r: 0.3 },     // North Africa (Sahara)
-      { lat: -25, lon: 28, r: 0.25 },   // Southern Africa
-
-      // Asia
-      { lat: 45, lon: 90, r: 0.5 },     // Central Asia/Siberia
-      { lat: 35, lon: 105, r: 0.35 },   // China
-      { lat: 25, lon: 70, r: 0.25 },    // India
-      { lat: 35, lon: 140, r: 0.2 },    // Japan
-
-      // Australia
-      { lat: -25, lon: 135, r: 0.35 },  // Central Australia
-
-      // Greenland
-      { lat: 72, lon: -42, r: 0.2 },
-
-      // Antarctica (ring at bottom)
-      { lat: -80, lon: 0, r: 0.6 },
-    ];
-
-    continents.forEach(({ lat, lon, r }) => {
-      const pos = latLonToVec3(lat, lon, 2.05);
-      const ringGeo = new THREE.RingGeometry(r * 0.4, r, 24);
-      const patch = new THREE.Mesh(ringGeo, landMat);
-      // Position at the correct point on sphere surface
-      patch.position.copy(pos);
-      // Orient to face outward from sphere center
-      patch.lookAt(new THREE.Vector3(0, 0, 0));
-      earthGroup.add(patch);
-    });
-
-    // ── Ice caps (flat rings) ──
-    const iceMat = new THREE.MeshPhongMaterial({
-      color: 0xeeeeff, emissive: 0x222233, emissiveIntensity: 0.1,
-      transparent: true, opacity: 0.85, side: THREE.DoubleSide,
-    });
-
-    // North pole ice
-    const northIce = new THREE.Mesh(new THREE.RingGeometry(0, 0.4, 32), iceMat);
-    northIce.position.set(0, 2.07, 0);
-    northIce.rotation.x = -Math.PI / 2;
-    earthGroup.add(northIce);
-
-    // South pole ice (larger ring)
-    const southIce = new THREE.Mesh(new THREE.RingGeometry(0, 0.7, 32), iceMat);
-    southIce.position.set(0, -2.07, 0);
-    southIce.rotation.x = Math.PI / 2;
-    earthGroup.add(southIce);
-
-    // ── Clouds (flat patches scattered across sphere) ──
-    const cloudMat = new THREE.MeshPhongMaterial({
-      color: 0xffffff, transparent: true, opacity: 0.25, side: THREE.DoubleSide, depthWrite: false,
-    });
-
-    for (let i = 0; i < 120; i++) {
-      const lat = Math.random() * 160 - 80; // -80 to +80
-      const lon = Math.random() * 360 - 180;
-      const pos = latLonToVec3(lat, lon, 2.08);
-      const size = 0.05 + Math.random() * 0.2;
-
-      const cloudPatch = new THREE.Mesh(new THREE.RingGeometry(0, size, 16), cloudMat.clone());
-      cloudPatch.position.copy(pos);
-      cloudPatch.lookAt(new THREE.Vector3(0, 0, 0));
-      earthGroup.add(cloudPatch);
-    }
+    const clouds = new THREE.Mesh(cloudGeo, cloudMat);
+    earthGroup.add(clouds);
 
     // ── Atmosphere glow (Fresnel shader) ──
     const atmosGeo = new THREE.SphereGeometry(2.35, 64, 32);
@@ -208,30 +375,25 @@ export default function SatelliteOrbit() {
     const orbitMaterial = new THREE.LineDashedMaterial({
       color: 0x4488ff, transparent: true, opacity: 0.15, dashSize: 0.2, gapSize: 0.3,
     });
-    const orbitLine = new THREE.Line(orbitLineGeo, orbitMaterial);
-    orbitLine.computeLineDistances();
-    orbitLine.rotation.x = Math.PI * 0.18;
-    scene.add(orbitLine);
+    scene.add(new THREE.Line(orbitLineGeo, orbitMaterial));
 
     // ── Satellite ──
     const satGroup = new THREE.Group();
 
-    const bodyGeo = new THREE.BoxGeometry(0.15, 0.15, 0.25);
     const bodyMat = new THREE.MeshPhongMaterial({ color: 0x888899, shininess: 60 });
-    satGroup.add(new THREE.Mesh(bodyGeo, bodyMat));
-
-    const panelGeo = new THREE.BoxGeometry(0.45, 0.01, 0.12);
     const panelMat = new THREE.MeshPhongMaterial({ color: 0x1a1a6e, emissive: 0x1122aa, emissiveIntensity: 0.3, shininess: 90 });
-    satGroup.add(new THREE.Mesh(panelGeo, panelMat).translateX(-0.3));
-    const panelR = new THREE.Mesh(panelGeo, panelMat);
+
+    satGroup.add(new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.25), bodyMat));
+    const panelL = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.01, 0.12), panelMat);
+    panelL.position.x = -0.3;
+    satGroup.add(panelL);
+    const panelR = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.01, 0.12), panelMat);
     panelR.position.x = 0.3;
     satGroup.add(panelR);
 
-    // Antenna
+    // Antenna dish
     const antennaBase = new THREE.CylinderGeometry(0.01, 0.01, 0.15, 8);
-    const antennaMesh = new THREE.Mesh(antennaBase, new THREE.MeshPhongMaterial({ color: 0xcccccc }));
-    antennaMesh.position.y = 0.15;
-    satGroup.add(antennaMesh);
+    satGroup.add(new THREE.Mesh(antennaBase, new THREE.MeshPhongMaterial({ color: 0xcccccc })).translateY(0.15));
 
     const dishGeo = new THREE.SphereGeometry(0.06, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.4);
     const dish = new THREE.Mesh(dishGeo, new THREE.MeshPhongMaterial({ color: 0xeeeeee, side: THREE.DoubleSide }));
@@ -241,6 +403,13 @@ export default function SatelliteOrbit() {
 
     scene.add(satGroup);
 
+    // ── Lights (for satellite only, earth uses its own shader) ──
+    scene.add(new THREE.AmbientLight(0x223344, 0.4));
+    const sunLight = new THREE.DirectionalLight(0xffeedd, 2.5);
+    sunLight.position.set(8, 4, 6);
+    scene.add(sunLight);
+    scene.add(new THREE.DirectionalLight(0x334466, 0.15).translate(-5, -2, -4));
+
     // ── Animation ──
     let prevTime = performance.now();
 
@@ -249,9 +418,20 @@ export default function SatelliteOrbit() {
       const time = (performance.now() - prevTime) / 1000;
       prevTime = performance.now();
 
-      earthGroup.rotation.y += time * 0.05;
-      satGroup.position.x = Math.cos(time * 0.3) * orbitRadius;
-      satGroup.position.z = Math.sin(time * 0.3) * orbitRadius;
+      // Rotate Earth slowly
+      earthGroup.rotation.y += time * 0.03;
+
+      // Clouds rotate slightly faster for parallax effect
+      clouds.rotation.y += time * 0.04;
+
+      // Update shader uniforms
+      earthMat.uniforms.uTime.value = time;
+      cloudMat.uniforms.uTime.value = time;
+
+      // Satellite orbit
+      const angle = time * 0.3;
+      satGroup.position.x = Math.cos(angle) * orbitRadius;
+      satGroup.position.z = Math.sin(angle) * orbitRadius;
       satGroup.position.y = Math.sin(time * 0.6) * 0.4;
 
       const lookTarget = new THREE.Vector3(0, 0, 0);
