@@ -383,8 +383,10 @@ export default function SatelliteOrbit() {
     satGroup.add(panelR);
 
     // Antenna dish
-    const antennaBase = new THREE.CylinderGeometry(0.01, 0.01, 0.15, 8);
-    satGroup.add(new THREE.Mesh(antennaBase, new THREE.MeshPhongMaterial({ color: 0xcccccc })).translateY(0.15));
+    const antennaMat = new THREE.MeshPhongMaterial({ color: 0xcccccc });
+    const antennaMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.15, 8), antennaMat);
+    antennaMesh.position.y = 0.15;
+    satGroup.add(antennaMesh);
 
     const dishGeo = new THREE.SphereGeometry(0.06, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.4);
     const dish = new THREE.Mesh(dishGeo, new THREE.MeshPhongMaterial({ color: 0xeeeeee, side: THREE.DoubleSide }));
@@ -399,7 +401,9 @@ export default function SatelliteOrbit() {
     const sunLight = new THREE.DirectionalLight(0xffeedd, 2.5);
     sunLight.position.set(8, 4, 6);
     scene.add(sunLight);
-    scene.add(new THREE.DirectionalLight(0x334466, 0.15).translate(-5, -2, -4));
+    const fillLight = new THREE.DirectionalLight(0x334466, 0.15);
+    fillLight.position.set(-5, -2, -4);
+    scene.add(fillLight);
 
     // ── Animation ──
     let prevTime = performance.now();
