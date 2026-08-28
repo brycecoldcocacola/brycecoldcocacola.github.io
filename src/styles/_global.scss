@@ -171,8 +171,24 @@
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
-    scroll-snap-type: y proximity;
+    scroll-snap-type: y mandatory;
   }
+}
+
+// Each major section is its own scroll-snap page so scrolling feels
+// consistent throughout the site instead of mixing free + paged scroll.
+.hero,
+.education,
+.skills {
+  scroll-snap-align: start;
+}
+
+.education,
+.skills {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 * {
