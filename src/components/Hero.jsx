@@ -1,5 +1,4 @@
 import { profile } from "../data";
-import avatar from "../assets/avatar.png";
 import Reveal from "./Reveal";
 import "./Hero.scss";
 
@@ -12,9 +11,6 @@ export default function Hero() {
         <div className="hero__intro">
           <Reveal className="hero__eyebrow" as="p">
             <span className="eyebrow">{greeting}</span>
-            <span className="hero__eyebrow-sep" aria-hidden="true">/</span>
-            <span className="hero__location">{role}</span>
-            <span className="hero__location">· {location}</span>
           </Reveal>
 
           <h1 className="hero__name">
@@ -26,23 +22,22 @@ export default function Hero() {
             </Reveal>
           </h1>
 
-          <Reveal as="p" className="hero__summary" delay={280}>
+          <Reveal as="p" className="hero__subtitle" delay={240}>
+            <span className="hero__location">{role}</span>
+            <span className="hero__eyebrow-sep" aria-hidden="true">/</span>
+            <span className="hero__location">{location}</span>
+          </Reveal>
+
+          <Reveal as="p" className="hero__summary" delay={300}>
             {summary}
           </Reveal>
 
-          <Reveal as="div" className="hero__actions" delay={360}>
+          <Reveal as="div" className="hero__actions" delay={380}>
             <a href="#experience" className="btn btn--primary">
               View experience
             </a>
           </Reveal>
         </div>
-
-        <Reveal className="hero__portrait" delay={200}>
-          <div className="hero__portrait-glow" aria-hidden="true" />
-          <div className="hero__portrait-frame">
-            <img src={avatar} alt="Portrait of Bryce Anglin" />
-          </div>
-        </Reveal>
       </div>
 
       <a href="#experience" className="hero__scroll" aria-label="Scroll to experience">

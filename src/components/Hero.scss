@@ -11,7 +11,6 @@
   display: grid;
   grid-template-columns: 1fr;
   align-items: center;
-  gap: clamp(3rem, 6vw, 5rem);
 }
 
 .hero__eyebrow {
@@ -39,7 +38,7 @@
   font-size: clamp(3.2rem, 9vw, 6.5rem);
   line-height: 0.95;
   letter-spacing: -0.02em;
-  margin-bottom: clamp(1.25rem, 3vw, 1.75rem);
+  margin-bottom: clamp(0.9rem, 2vw, 1.25rem);
 
   em {
     font-style: italic;
@@ -47,13 +46,12 @@
   }
 }
 
-.hero__tagline {
-  font-size: clamp(1.3rem, 2.4vw, 1.7rem);
-  font-weight: 500;
-  line-height: 1.35;
-  letter-spacing: -0.01em;
-  max-width: 24ch;
-  margin-bottom: 1.25rem;
+.hero__subtitle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: clamp(1.5rem, 3vw, 2rem);
 }
 
 .hero__summary {
@@ -69,104 +67,6 @@
   align-items: center;
   flex-wrap: wrap;
   gap: clamp(1.25rem, 3vw, 2rem);
-}
-
-.hero__status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  font-family: var(--font-mono);
-  font-size: 0.74rem;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-}
-
-.hero__status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 0 var(--accent-line);
-  animation: pulse 2.6s var(--ease-out) infinite;
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 var(--accent-line);
-  }
-  70% {
-    box-shadow: 0 0 0 8px rgba(232, 179, 107, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(232, 179, 107, 0);
-  }
-}
-
-// Portrait
-.hero__portrait {
-  position: relative;
-  justify-self: center;
-  width: min(360px, 78vw);
-}
-
-.hero__portrait-glow {
-  position: absolute;
-  inset: -18% -18% -10%;
-  background: radial-gradient(
-    50% 50% at 50% 40%,
-    var(--accent-soft),
-    transparent 70%
-  );
-  filter: blur(8px);
-  z-index: -1;
-}
-
-.hero__portrait-frame {
-  position: relative;
-  aspect-ratio: 4 / 5;
-  border-radius: var(--radius);
-  overflow: hidden;
-  border: 1px solid var(--border-strong);
-  background: linear-gradient(160deg, var(--surface-2), var(--bg-elev));
-  box-shadow:
-    0 30px 60px -20px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center top;
-  }
-
-  // soft vignette so the photo settles into the page
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to top,
-      rgba(10, 10, 12, 0.55),
-      transparent 45%
-    );
-    pointer-events: none;
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .hero__portrait-frame {
-    animation: floaty 9s ease-in-out infinite;
-  }
-}
-
-@keyframes floaty {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-12px);
-  }
 }
 
 // Scroll cue
@@ -215,15 +115,5 @@
   60%,
   100% {
     transform: translateY(250%);
-  }
-}
-
-@media (min-width: 900px) {
-  .hero__grid {
-    grid-template-columns: 1.1fr 0.9fr;
-  }
-
-  .hero__portrait {
-    width: min(400px, 34vw);
   }
 }
