@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
 // Master-Maps style Blue Marble textures (served via jsDelivr with CORS so
-// WebGL can sample them). Day = surface, night = city lights, spec = ocean mask.
+// WebGL can sample them). 4096 day / night, plus ocean specular + clouds.
 const BASE = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r185/examples/textures/planets/';
 
 // ── Globe shader: soft wrap-lighting day / night-lights blend, gentle sheen ──
@@ -39,8 +39,10 @@ void main() {
   float nDotL = dot(n, uSunDir);
   float dayLight = smoothstep(-0.18, 0.25, nDotL);
 
-  vec3 base = night.rgb * 0.9;
-  base = mix(base, day.rgb, dayLight);
+  // Brighten the lit hemisphere a touch and lift the night side so the
+  // earth never reads as a black ball on the live site.
+  vec3 base = night.rgb * 1.6 + 0.04;
+  base = mix(base, day.rgb * 1.12, dayLight);
 
   // Subtle warm band across the terminator.
   float term = smoothstep(-0.28, -0.04, nDotL) * (1.0 - smoothstep(0.06, 0.30, nDotL));
@@ -59,7 +61,7 @@ void main() {
 }
 `;
 
-// ── Clouds shader: lit/dark grey, alpha from texture ──
+// ── Clouds shader: hug the globe, directional shading for depth ──
 const cloudVertex = `
 varying vec2 vUv;
 varying vec3 vNormal;
@@ -80,9 +82,9 @@ varying vec3 vNormal;
 void main() {
   vec4 c = texture2D(uClouds, vUv);
   float nDotL = dot(normalize(vNormal), uSunDir);
-  float light = 0.32 + 0.68 * smoothstep(-0.4, 0.45, nDotL);
-  vec3 col = vec3(light * 1.05, light, light * 0.98);
-  gl_FragColor = vec4(col, c.a * 0.85);
+  float light = 0.30 + 0.70 * smoothstep(-0.35, 0.5, nDotL);
+  vec3 col = vec3(light * 1.08, light, light * 0.97);
+  gl_FragColor = vec4(col, c.a * 0.7);
 }
 `;
 
@@ -134,32 +136,27 @@ void main() {
 }
 `;
 
-// ── Meteor-style satellite: a glowing head + a dissipating trail ──
+// ── Meteor-style satellite: a glowing, dissipating trail (no solid head). ──
 class Meteor {
-  constructor(radius, inclination, node, speed, phase, color) {
+  constructor({ radius, inclination, node, speed, phase, color, tail }) {
     this.radius = radius;
     this.inc = inclination;
     this.node = node;
     this.speed = speed;
     this.phase = phase;
     this.color = color;
-    this.history = [];
-    this.trailLen = 46;
+    this.tail = tail; // seconds of past sampled into the trail
+    this.samples = 72;
 
     const geo = new THREE.BufferGeometry();
-    const positions = new Float32Array(this.trailLen * 3);
-    const colors = new Float32Array(this.trailLen * 3);
+    const positions = new Float32Array(this.samples * 3);
+    const colors = new Float32Array(this.samples * 3);
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     this.line = new THREE.Line(geo, new THREE.LineBasicMaterial({
       vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
     }));
     this.line.frustumCulled = false;
-
-    this.head = new THREE.Points(
-      new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(3), 3)),
-      new THREE.PointsMaterial({ color: color, size: 0.09, sizeAttenuation: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }),
-    );
   }
 
   posAt(t, out) {
@@ -169,36 +166,28 @@ class Meteor {
     const ci = Math.cos(this.inc), si = Math.sin(this.inc);
     const y2 = y * ci, z2 = y * si;
     const cn = Math.cos(this.node), sn = Math.sin(this.node);
-    out.set(x * cn + z2 * sn, y2, -x * sn + z2 * cn);
-    return out;
+    return out.set(x * cn + z2 * sn, y2, -x * sn + z2 * cn);
   }
 
   update(t) {
-    const p = this.posAt(t, new THREE.Vector3());
-    this.history.unshift(p);
-    if (this.history.length > this.trailLen) this.history.pop();
-
     const posAttr = this.line.geometry.getAttribute('position');
     const colAttr = this.line.geometry.getAttribute('color');
-    const n = this.history.length;
-    for (let i = 0; i < this.trailLen; i++) {
-      const v = i < n ? this.history[i] : p;
-      posAttr.setXYZ(i, v.x, v.y, v.z);
-      const t2 = i / this.trailLen;
-      const fade = i < n ? Math.pow(1 - t2, 2.2) : 0;
-      colAttr.setXYZ(i, this.color.r * fade, this.color.g * fade, this.color.b * fade);
+    const tmp = new THREE.Vector3();
+    for (let i = 0; i < this.samples; i++) {
+      // Sample the recent past so the tail stays long regardless of speed.
+      const tt = t - (i / (this.samples - 1)) * this.tail;
+      this.posAt(tt, tmp);
+      posAttr.setXYZ(i, tmp.x, tmp.y, tmp.z);
+      const f = Math.pow(1 - i / this.samples, 2.4); // bright head → black tail
+      colAttr.setXYZ(i, this.color.r * f, this.color.g * f, this.color.b * f);
     }
     posAttr.needsUpdate = true;
     colAttr.needsUpdate = true;
-    this.head.geometry.getAttribute('position').setXYZ(0, p.x, p.y, p.z);
-    this.head.geometry.getAttribute('position').needsUpdate = true;
   }
 
   dispose() {
     this.line.geometry.dispose();
     this.line.material.dispose();
-    this.head.geometry.dispose();
-    this.head.material.dispose();
   }
 }
 
@@ -372,19 +361,19 @@ export default function SatelliteOrbit() {
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+    renderer.toneMappingExposure = 1.5;
     container.appendChild(renderer.domElement);
 
     const sunDir = new THREE.Vector3(1.0, 0.35, 0.55).normalize();
 
     // ── Point-cloud stars ──
-    const starCount = 4000;
+    const starCount = 9000;
     const starGeo = new THREE.BufferGeometry();
     const starPositions = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount; i++) {
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      const r = 500 + Math.random() * 500;
+      const r = 500 + Math.random() * 600;
       starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       starPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
       starPositions[i * 3 + 2] = r * Math.cos(phi);
@@ -425,8 +414,8 @@ export default function SatelliteOrbit() {
     });
     earthGroup.add(new THREE.Mesh(earthGeo, globeMat));
 
-    // Clouds.
-    const cloudGeo = new THREE.SphereGeometry(2.28, 96, 48);
+    // Clouds — hugging the globe so they read as part of it, not a floating layer.
+    const cloudGeo = new THREE.SphereGeometry(2.212, 96, 48);
     const cloudMat = new THREE.ShaderMaterial({
       vertexShader: cloudVertex,
       fragmentShader: cloudFragment,
@@ -460,14 +449,18 @@ export default function SatelliteOrbit() {
     });
     earthGroup.add(new THREE.Mesh(new THREE.SphereGeometry(2.6, 64, 32), outerAtmosMat));
 
-    // ── Meteor-style satellites ──
+    // ── Meteor-style satellite trails ──
     const meteorDefs = [
-      { r: 2.45, inc: 0.55, node: 0.2, speed: 0.35, phase: 0.0, color: new THREE.Color('#ffd9a0') },
-      { r: 2.62, inc: -0.9, node: 1.1, speed: -0.28, phase: 2.1, color: new THREE.Color('#a0d4ff') },
-      { r: 2.85, inc: 1.3, node: -0.6, speed: 0.22, phase: 4.2, color: new THREE.Color('#ffe0c0') },
+      { r: 2.46, inc: 0.55, node: 0.20, speed: 0.10, phase: 0.0, color: new THREE.Color('#ffd9a0'), tail: 9 },
+      { r: 2.62, inc: -0.90, node: 1.10, speed: -0.085, phase: 2.1, color: new THREE.Color('#a0d4ff'), tail: 11 },
+      { r: 2.85, inc: 1.30, node: -0.60, speed: 0.07, phase: 4.2, color: new THREE.Color('#ffe0c0'), tail: 13 },
+      { r: 2.55, inc: 0.25, node: -1.60, speed: 0.095, phase: 1.1, color: new THREE.Color('#ff9e80'), tail: 8 },
+      { r: 2.72, inc: -1.60, node: 2.40, speed: -0.065, phase: 5.4, color: new THREE.Color('#9ee8ff'), tail: 12 },
+      { r: 2.95, inc: 0.85, node: 0.05, speed: 0.055, phase: 3.0, color: new THREE.Color('#ffe6b0'), tail: 14 },
+      { r: 2.40, inc: 2.10, node: 1.70, speed: 0.115, phase: 0.6, color: new THREE.Color('#ffc0d0'), tail: 7 },
     ];
-    const meteors = meteorDefs.map((d) => new Meteor(d.r, d.inc, d.node, d.speed, d.phase, d.color));
-    meteors.forEach((m) => { m.line.frustumCulled = false; scene.add(m.line); scene.add(m.head); });
+    const meteors = meteorDefs.map((d) => new Meteor(d));
+    meteors.forEach((m) => { m.line.frustumCulled = false; scene.add(m.line); });
 
     // ── Drag-to-spin state ──
     const spin = { rotX: 0.08, rotY: -0.5, velX: 0, velY: 0 };
@@ -513,8 +506,8 @@ export default function SatelliteOrbit() {
     // ── Load Blue Marble textures, then swap into uniforms ──
     let disposed = false;
     Promise.all([
-      loadTex(BASE + 'earth_atmos_2048.jpg'),
-      loadTex(BASE + 'earth_lights_2048.png'),
+      loadTex(BASE + 'earth_day_4096.jpg'),
+      loadTex(BASE + 'earth_night_4096.jpg'),
       loadTex(BASE + 'earth_specular_2048.jpg'),
       loadTex(BASE + 'earth_clouds_1024.png'),
     ]).then(([day, night, spec, cloud]) => {
@@ -540,16 +533,16 @@ export default function SatelliteOrbit() {
       const elapsed = (now - start) / 1000;
 
       // Slow base spin blended into user drag inertia.
-      spin.rotY += dt * 0.04;
+      spin.rotY += dt * 0.015;
       if (!dragging) {
-        spin.velX *= 0.95;
-        spin.velY *= 0.95;
+        spin.velX *= 0.97;
+        spin.velY *= 0.97;
         spin.rotY += spin.velY;
         spin.rotX += spin.velX;
         spin.rotX = Math.max(-0.6, Math.min(0.6, spin.rotX));
       }
       earthGroup.rotation.set(spin.rotX, spin.rotY, 0);
-      clouds.rotation.y += dt * 0.01;
+      clouds.rotation.y += dt * 0.006;
 
       // Meteor trails.
       meteors.forEach((m) => m.update(elapsed));

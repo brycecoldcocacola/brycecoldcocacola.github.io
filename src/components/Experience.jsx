@@ -81,9 +81,6 @@ export default function Experience() {
                   <Suspense fallback={null}>
                     <SatelliteOrbit />
                   </Suspense>
-                  <span className="company__orbit-caption">
-                    Low-Earth orbit
-                  </span>
                 </div>
               )}
             </Reveal>
