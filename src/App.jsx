@@ -8,12 +8,12 @@ import Education from "./education/Education";
 
 export default function App() {
   return (
-    <div className="app-scroll">
+    <main className="app-scroll">
       <Home />
       <ParallelDomain />
       <Tempo />
       <Aerospace />
       <Education />
-    </div>
+    </main>
   );
 }

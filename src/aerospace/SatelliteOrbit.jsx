@@ -80,42 +80,23 @@ float fbm(vec3 p) {
   float value = 0.0;
   float amplitude = 0.5;
   float frequency = 1.0;
-  
+
   // Layer 1: Large continent-scale features
   value += snoise(p * frequency) * amplitude;
   frequency *= 2.0;
   amplitude *= 0.5;
-  
+
   // Layer 2: Medium detail (peninsulas, bays)
   value += snoise(p * frequency) * amplitude;
   frequency *= 2.0;
   amplitude *= 0.5;
-  
+
   // Layer 3: Fine detail (coastal irregularities)
   value += snoise(p * frequency) * amplitude;
   frequency *= 2.0;
   amplitude *= 0.25;
-  
+
   return value;
-}
-
-float cloudNoise(vec2 uv, float time) {
-  vec3 p = vec3(uv * 4.0, time * 0.02);
-  float n = snoise(p) * 0.6;
-  n += snoise(p * 2.0 + 17.0) * 0.3;
-  n += snoise(p * 4.0 + 37.0) * 0.1;
-  
-  // Shape into cloud-like patterns
-  float mask = smoothstep(-0.1, 0.5, n);
-  return mask;
-}
-
-float coastNoise(vec2 uv) {
-  vec3 p = vec3(uv * 6.0 + vec2(7.0, 13.0));
-  float n = snoise(p) * 0.4;
-  n += snoise(p * 3.0 + 5.0) * 0.3;
-  n += snoise(p * 7.0 + 19.0) * 0.2;
-  return smoothstep(-0.15, 0.3, n);
 }
 
 // Latitude-based features (ice caps)
@@ -173,18 +154,20 @@ vec3 getTerrainColor(float elevation, vec2 uv, float latAbs) {
 
 const earthVertexShader = `
 varying vec3 vWorldPos;
+varying vec3 vNormal;
 varying vec2 vUv;
 void main() {
   vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+  vNormal = normal;
   vUv = uv;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
 `;
 
 const earthFragmentShader = `
+varying vec3 vWorldPos;
 varying vec3 vNormal;
 varying vec2 vUv;
-uniform float uTime;
 
 ${noiseGLSL}
 
@@ -313,7 +296,6 @@ export default function SatelliteOrbit() {
     const earthMat = new THREE.ShaderMaterial({
       vertexShader: earthVertexShader,
       fragmentShader: earthFragmentShader,
-      uniforms: { uTime: { value: 0 } },
     });
     earthGroup.add(new THREE.Mesh(earthGeo, earthMat));
 
@@ -406,32 +388,35 @@ export default function SatelliteOrbit() {
     scene.add(fillLight);
 
     // ── Animation ──
+    const start = performance.now();
     let prevTime = performance.now();
 
     function animate() {
       animRef.current = requestAnimationFrame(animate);
-      const time = (performance.now() - prevTime) / 1000;
-      prevTime = performance.now();
 
-      // Rotate Earth slowly
-      earthGroup.rotation.y += time * 0.03;
+      const now = performance.now();
+      // Clamp delta so returning to the tab (or resuming after the observer
+      // paused the loop) doesn't cause a huge jump in rotation.
+      const dt = Math.min((now - prevTime) / 1000, 0.1);
+      prevTime = now;
+      const elapsed = (now - start) / 1000;
 
-      // Clouds rotate slightly faster for parallax effect
-      clouds.rotation.y += time * 0.04;
+      // Rotate Earth slowly, clouds slightly faster for parallax
+      earthGroup.rotation.y += dt * 0.03;
+      clouds.rotation.y += dt * 0.04;
 
-      // Update shader uniforms
-      earthMat.uniforms.uTime.value = time;
-      cloudMat.uniforms.uTime.value = time;
+      // Cloud animation
+      cloudMat.uniforms.uTime.value = elapsed;
 
-      // Satellite orbit
-      const angle = time * 0.3;
-      satGroup.position.x = Math.cos(angle) * orbitRadius;
-      satGroup.position.z = Math.sin(angle) * orbitRadius;
-      satGroup.position.y = Math.sin(time * 0.6) * 0.4;
-
-      const lookTarget = new THREE.Vector3(0, 0, 0);
-      satGroup.lookAt(lookTarget);
-      satGroup.rotation.z += Math.sin(time * 1.5) * 0.1;
+      // Satellite orbit (absolute position from elapsed time)
+      const angle = elapsed * 0.3;
+      satGroup.position.set(
+        Math.cos(angle) * orbitRadius,
+        Math.sin(elapsed * 0.6) * 0.4,
+        Math.sin(angle) * orbitRadius,
+      );
+      satGroup.lookAt(0, 0, 0);
+      satGroup.rotation.z = Math.sin(elapsed * 1.5) * 0.1;
 
       renderer.render(scene, camera);
     }
@@ -464,7 +449,17 @@ export default function SatelliteOrbit() {
       if (animRef.current) cancelAnimationFrame(animRef.current);
       window.removeEventListener('resize', handleResize);
       observer.disconnect();
-      if (container && renderer.domElement.parentNode === container) container.removeChild(renderer.domElement);
+
+      // Release GPU resources for every mesh in the scene
+      scene.traverse((obj) => {
+        if (obj.geometry) obj.geometry.dispose();
+        const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+        materials.forEach((material) => material && material.dispose());
+      });
+
+      if (container && renderer.domElement.parentNode === container) {
+        container.removeChild(renderer.domElement);
+      }
       renderer.dispose();
     };
   }, []);

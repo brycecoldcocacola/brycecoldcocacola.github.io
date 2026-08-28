@@ -1,72 +1,65 @@
 import { Container, Row, Col, Card } from 'react-bootstrap';
-import { SiPython, SiJavascript } from "react-icons/si";
-import { FaDatabase, FaEllipsisH } from "react-icons/fa";
+import { SiPython, SiJavascript } from 'react-icons/si';
+import { FaDatabase, FaCogs } from 'react-icons/fa';
+import Section from '../components/Section';
+import RoleCard from '../components/RoleCard';
 import './Education.scss';
+
+const DEGREES = [
+  {
+    degree: "Master's Degree",
+    date: '2016 - 2018 · University of California, Los Angeles',
+    field: 'Aerospace Engineering & System Controls',
+  },
+  {
+    degree: "Bachelor's Degree",
+    date: '2011 - 2015 · University of California, Davis',
+    field: 'Mechanical Engineering & Technology Management',
+  },
+];
+
+const SKILLS = [
+  { Icon: SiPython, name: 'Python', color: 'python', stack: 'Flask, Django, SQLAlchemy' },
+  { Icon: SiJavascript, name: 'JavaScript', color: 'javascript', stack: 'React, Vue, jQuery' },
+  { Icon: FaDatabase, name: 'Database', color: 'database', stack: 'PostgreSQL, Neo4j, MongoDB' },
+  { Icon: FaCogs, name: 'Other', color: 'other', stack: 'Git, Agile, DevOps' },
+];
 
 export default function Education() {
   return (
-    <section id="education" className="education">
-      <Container>
-        <Row className="align-items-center">
-          <Col lg={8}>
-            <h3 className="section-title mb-4 fade-in">Education</h3>
+    <>
+      <Section id="education" className="education" title="Education">
+        {DEGREES.map(({ degree, date, field }) => (
+          <RoleCard key={degree} role={degree} date={date}>
+            {field}
+          </RoleCard>
+        ))}
+      </Section>
 
-            <div className="degree-card fade-right">
-              <h5>Master's Degree</h5>
-              <p className="degree-date">2016 - 2018 • University of California, Los Angeles</p>
-              <p className="degree-field">Aerospace Engineering & System Controls</p>
-            </div>
-
-            <div className="degree-card fade-right">
-              <h5>Bachelor's Degree</h5>
-              <p className="degree-date">2011 - 2015 • University of California, Davis</p>
-              <p className="degree-field">Mechanical Engineering & Technology Management</p>
-            </div>
-
-            <div className="skills-section fade-right">
-              <h4>Skills</h4>
-              <Row>
-                <Col xs={6} lg={3}>
-                  <Card className="text-center h-100">
-                    <Card.Body>
-                      <Card.Title className="d-flex justify-content-center logo py"><div><SiPython/></div></Card.Title>
-                      <Card.Title>Python</Card.Title>
-                      <Card.Text>Flask, Django, SQLAlchemy</Card.Text>
-                    </Card.Body>
-                  </Card>
-                </Col>
-                <Col xs={6} lg={3}>
-                  <Card className="text-center h-100">
-                    <Card.Body>
-                      <Card.Title className="d-flex justify-content-center logo js"><div><SiJavascript/></div></Card.Title>
-                      <Card.Title>JavaScript</Card.Title>
-                      <Card.Text>React, Vue, jQuery</Card.Text>
-                    </Card.Body>
-                  </Card>
-                </Col>
-                <Col xs={6} lg={3}>
-                  <Card className="text-center h-100">
-                    <Card.Body>
-                      <Card.Title className="d-flex justify-content-center logo db"><div><FaDatabase/></div></Card.Title>
-                      <Card.Title>Database</Card.Title>
-                      <Card.Text>PostgreSQL, Neo4j, MongoDB</Card.Text>
-                    </Card.Body>
-                  </Card>
-                </Col>
-                <Col xs={6} lg={3}>
-                  <Card className="text-center h-100">
-                    <Card.Body>
-                      <Card.Title className="d-flex justify-content-center logo other"><div><FaEllipsisH/></div></Card.Title>
-                      <Card.Title>Other</Card.Title>
-                      <Card.Text>Git, Agile, DevOps</Card.Text>
-                    </Card.Body>
-                  </Card>
-                </Col>
+      <section id="skills" className="resume-section skills">
+        <Container>
+          <Row className="align-items-center justify-content-center g-4">
+            <Col lg={8}>
+              <h3 className="section-title fade-in">Skills</h3>
+              <Row className="g-3">
+                {SKILLS.map(({ Icon, name, color, stack }) => (
+                  <Col key={name} xs={6} lg={3}>
+                    <Card className="text-center h-100 skill-card fade-right">
+                      <Card.Body>
+                        <div className={`skill-icon skill-icon--${color}`}>
+                          <Icon />
+                        </div>
+                        <Card.Title className="fs-5">{name}</Card.Title>
+                        <Card.Text className="text-body-secondary">{stack}</Card.Text>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
               </Row>
-            </div>
-          </Col>
-        </Row>
-      </Container>
-    </section>
+            </Col>
+          </Row>
+        </Container>
+      </section>
+    </>
   );
 }

@@ -1,0 +1,15 @@
+{
+  "short_name": "Bryce Anglin",
+  "name": "Bryce Anglin - Web & Software Developer",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "type": "image/png",
+      "sizes": "400x400"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
