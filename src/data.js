@@ -6,21 +6,17 @@ export const profile = {
   lastName: "Anglin",
   role: "Software Developer",
   location: "San Francisco, California",
-  // A punchy statement for the hero. The last line is emphasized.
-  headline: [
-    "Building software for",
-    "satellites, simulations,",
-    "and machine learning.",
-  ],
+  greeting: "Hi, I'm",
   summary:
-    "I work across web, graphics, and machine-learning systems — from real-time satellite constellations at The Aerospace Corporation, to computer-vision tooling at Tempo, to simulation for autonomous vehicles at Parallel Domain.",
-  current: "Building at Parallel Domain",
+    "Whether it's visualizing and simulating satellite systems, helping people get in shape, or simulating autonomous physical systems, I always enjoy applying my skills to make the world a better place.",
 };
 
 export const experience = [
   {
     company: "Parallel Domain",
-    blurb: "Simulation & synthetic data for autonomous vehicles",
+    url: "https://paralleldomain.com/",
+    theme: "pd",
+    blurb: "Photorealistic synthetic data & simulation for AVs, robotics, and AI",
     roles: [
       {
         title: "Principal Software Developer",
@@ -35,8 +31,10 @@ export const experience = [
   },
   {
     company: "Tempo",
-    blurb: "Autonomous long-haul trucking & delivery",
+    url: "https://tempo.fit/",
+    theme: "tempo",
     highlight: true,
+    blurb: "AI-powered home gym & virtual personal training",
     roles: [
       {
         title: "Tech Lead Manager",
@@ -64,8 +62,10 @@ export const experience = [
   },
   {
     company: "The Aerospace Corporation",
-    blurb: "Satellite & space-systems engineering",
+    url: "https://www.aero.org/",
+    theme: "aerospace",
     orbit: true,
+    blurb: "Satellite & space-systems engineering",
     roles: [
       {
         title: "Sr. Web & Graphics Software Developer",
@@ -98,25 +98,6 @@ export const education = [
     degree: "B.S. Mechanical Engineering",
     focus: "Technology Management",
     period: "2011 — 2015",
-  },
-];
-
-export const skillGroups = [
-  {
-    label: "Languages",
-    items: ["Python", "TypeScript", "JavaScript", "MATLAB", "SQL"],
-  },
-  {
-    label: "Web & Frameworks",
-    items: ["React", "Vue", "Three.js", "Flask", "Django", "Node.js"],
-  },
-  {
-    label: "Data & Machine Learning",
-    items: ["PostgreSQL", "Neo4j", "MongoDB", "SQLAlchemy", "Computer Vision", "ML Tooling"],
-  },
-  {
-    label: "Cloud & Tooling",
-    items: ["AWS", "S3", "Docker", "Git", "CI/CD", "Agile"],
   },
 ];
 

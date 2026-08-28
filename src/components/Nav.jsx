@@ -5,7 +5,6 @@ import "./Nav.scss";
 const LINKS = [
   { id: "experience", label: "Experience" },
   { id: "education", label: "Education" },
-  { id: "skills", label: "Skills" },
 ];
 
 export default function Nav() {

@@ -42,11 +42,24 @@ export default function Experience() {
 
         <div className="experience__list">
           {experience.map((company, i) => (
-            <Reveal key={company.company} className={`company ${company.orbit ? "company--feature" : ""}`} delay={i * 60}>
+            <Reveal
+              key={company.company}
+              className={`company ${company.theme ? `company--${company.theme}` : ""}`}
+              delay={i * 60}
+            >
+              <div className="company__bg" aria-hidden="true" />
               <div className="company__content">
                 <div className="company__head">
                   <div className="company__id">
-                    <h3 className="company__name">{company.company}</h3>
+                    <h3 className="company__name">
+                      {company.url ? (
+                        <a href={company.url} target="_blank" rel="noreferrer noopener">
+                          {company.company}
+                        </a>
+                      ) : (
+                        company.company
+                      )}
+                    </h3>
                     {company.blurb && (
                       <p className="company__blurb">{company.blurb}</p>
                     )}
