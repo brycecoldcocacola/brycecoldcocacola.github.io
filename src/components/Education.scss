@@ -1,0 +1,58 @@
+.edu {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 0.5rem 2rem;
+  padding-block: clamp(1.5rem, 3vw, 2.25rem);
+  border-bottom: 1px solid var(--border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.edu__name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.5rem, 2.8vw, 2rem);
+  line-height: 1.1;
+  transition: color 0.3s var(--ease);
+}
+
+.edu:hover .edu__name {
+  color: var(--accent);
+}
+
+.edu__degree {
+  margin-top: 0.35rem;
+  font-size: 1.02rem;
+  color: var(--text-muted);
+}
+
+.edu__focus {
+  margin-top: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.edu__period {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+@media (max-width: 620px) {
+  .edu {
+    grid-template-columns: 1fr;
+  }
+
+  .edu__period {
+    order: -1;
+    font-size: 0.74rem;
+  }
+}

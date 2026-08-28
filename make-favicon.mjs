@@ -1,0 +1,11 @@
+import { chromium } from 'playwright';
+import fs from 'fs';
+const svg = fs.readFileSync('public/favicon.svg', 'utf8');
+const browser = await chromium.launch({ channel: 'chrome', headless: true });
+const page = await browser.newPage({ viewport: { width: 512, height: 512 } });
+await page.setContent(`<!doctype html><html><body style="margin:0">${svg.replace('<svg','<svg width="512" height="512"')}</body></html>`);
+await page.waitForTimeout(400);
+const buf = await page.screenshot({ clip: { x: 0, y: 0, width: 512, height: 512 } });
+fs.writeFileSync('public/favicon.png', buf);
+await browser.close();
+console.log('favicon.png', buf.length, 'bytes');

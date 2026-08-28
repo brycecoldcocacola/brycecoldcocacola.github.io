@@ -1,0 +1,172 @@
+.experience__list {
+  display: grid;
+  gap: clamp(3.5rem, 7vw, 5.5rem);
+}
+
+.company__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.15rem;
+  margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+  border-bottom: 1px solid var(--border);
+}
+
+.company__name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.9rem, 3.6vw, 2.6rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.company__blurb {
+  margin-top: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+// Timeline of roles
+.company__roles {
+  position: relative;
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.1rem);
+  padding-left: 1.9rem;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
+    background: linear-gradient(var(--border-strong), var(--border) 70%, transparent);
+  }
+}
+
+.role {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: -1.9rem;
+    top: 0.45rem;
+    width: 9px;
+    height: 9px;
+    margin-left: 0;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1.5px solid var(--border-strong);
+    transform: translateX(0);
+    transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  }
+
+  &:first-child::before {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+}
+
+.role__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+.role__title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: color 0.3s var(--ease);
+}
+
+.role__period {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.role__meta {
+  margin-top: 0.25rem;
+  font-size: 0.82rem;
+  color: var(--text-faint);
+}
+
+.role__desc {
+  margin-top: 0.7rem;
+  font-size: 0.98rem;
+  line-height: 1.7;
+  color: var(--text-muted);
+  max-width: 62ch;
+}
+
+// Aerospace feature block (roles beside the orbit stage)
+.company__orbit {
+  position: relative;
+  margin-top: clamp(1.75rem, 3vw, 2.25rem);
+  height: clamp(340px, 82vw, 480px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 45%, #0c1024 0%, #05060c 100%);
+  pointer-events: none;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(10, 10, 12, 0.2),
+      rgba(10, 10, 12, 0) 40%,
+      rgba(10, 10, 12, 0.6)
+    );
+  }
+}
+
+.company__orbit-caption {
+  position: absolute;
+  left: 1.1rem;
+  bottom: 1rem;
+  z-index: 2;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.satellite-orbit {
+  width: 100%;
+  height: 100%;
+
+  canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
+@media (min-width: 900px) {
+  .company--feature .company__body {
+    display: grid;
+    grid-template-columns: 1fr minmax(280px, 360px);
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: start;
+  }
+
+  .company--feature .company__orbit {
+    margin-top: 0.4rem;
+    height: min(52vh, 460px);
+  }
+}

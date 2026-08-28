@@ -1,0 +1,13 @@
+import { chromium } from 'playwright';
+const url = process.argv[2] || 'http://localhost:5173';
+const outDir = process.argv[3] || '.';
+const browser = await chromium.launch({ channel: 'chrome', headless: true });
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
+await page.goto(url, { waitUntil: 'networkidle' });
+await page.waitForTimeout(1200);
+await page.evaluate(() => { document.querySelectorAll('.reveal').forEach(e => e.classList.add('is-visible')); });
+await page.waitForTimeout(1000);
+await page.screenshot({ path: outDir + '/shot-top.png' });
+await page.screenshot({ path: outDir + '/shot-full.png', fullPage: true });
+await browser.close();
+console.log('done');

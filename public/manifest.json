@@ -1,15 +1,16 @@
 {
+  "name": "Bryce Anglin",
   "short_name": "Bryce Anglin",
-  "name": "Bryce Anglin - Web & Software Developer",
+  "description": "Bryce Anglin — software developer working across web, graphics, and machine-learning systems",
+  "theme_color": "#0a0a0c",
+  "background_color": "#0a0a0c",
+  "display": "standalone",
+  "start_url": ".",
   "icons": [
     {
       "src": "/favicon.png",
-      "type": "image/png",
-      "sizes": "400x400"
+      "sizes": "512x512",
+      "type": "image/png"
     }
-  ],
-  "start_url": "/",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  ]
 }

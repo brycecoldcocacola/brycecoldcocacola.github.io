@@ -1,0 +1,24 @@
+import { chromium } from 'playwright';
+import fs from 'fs';
+import { PNG } from 'pngjs';
+const browser = await chromium.launch({ channel: 'chrome', headless: true });
+const page = await browser.newPage({ viewport: { width: 1000, height: 700 } });
+await page.goto('http://localhost:5173', { waitUntil: 'networkidle' });
+await page.evaluate(() => { document.querySelectorAll('.reveal').forEach(e=>e.classList.add('is-visible')); });
+const box = await page.evaluate(() => { const o=document.querySelector('.company__orbit'); const r=o.getBoundingClientRect(); return {x:r.left,y:r.top,width:r.width,height:r.height}; });
+await page.waitForTimeout(3000);
+const pngBuf = await page.screenshot({ clip: box });
+fs.writeFileSync('globe.png', pngBuf);
+const png = PNG.sync.read(fs.readFileSync('globe.png'));
+const d=png.data; let blue=0,green=0,brown=0,white=0,dark=0,mid=0,other=0; let rs=0,gss=0,bs=0; const N=png.width*png.height;
+for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2];rs+=r;gss+=g;bs+=b;
+  if(b>120&&b>r+30) blue++;
+  else if(g>90&&g>=r&&g>=b) green++;
+  else if(r>110&&g>70&&r>b+30) brown++;
+  else if(r>200&&g>200&&b>200) white++;
+  else if(r<25&&g<25&&b<35) dark++;
+  else mid++;
+}
+console.log('GLOBE VISUAL HISTOGRAM (px):', JSON.stringify({total:N,blue,green,brown,white,dark,mid}));
+console.log('AVERAGE COLOR:', [Math.round(rs/N),Math.round(gss/N),Math.round(bs/N)]);
+await browser.close();

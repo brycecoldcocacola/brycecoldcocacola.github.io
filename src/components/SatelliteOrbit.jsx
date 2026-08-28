@@ -330,8 +330,8 @@ export default function SatelliteOrbit() {
         void main() {
           float fresnel = 1.0 - dot(normalize(vNormal), normalize(vPositionView));
           fresnel = pow(fresnel, 2.5);
-          vec3 atmosColor = mix(vec3(0.2, 0.4, 0.9), vec3(0.4, 0.7, 1.0), fresnel);
-          gl_FragColor = vec4(atmosColor, fresnel * 0.5);
+          vec3 atmosColor = mix(vec3(0.95, 0.6, 0.35), vec3(1.0, 0.82, 0.55), fresnel);
+          gl_FragColor = vec4(atmosColor, fresnel * 0.6);
         }
       `,
       transparent: true, side: THREE.BackSide, depthWrite: false,
@@ -346,7 +346,7 @@ export default function SatelliteOrbit() {
     const orbitPoints = orbitCurve.getPoints(128);
     const orbitLineGeo = new THREE.BufferGeometry().setFromPoints(orbitPoints.map(p => new THREE.Vector3(p.x, 0, p.y)));
     const orbitMaterial = new THREE.LineDashedMaterial({
-      color: 0x4488ff, transparent: true, opacity: 0.15, dashSize: 0.2, gapSize: 0.3,
+      color: 0xe8b36b, transparent: true, opacity: 0.2, dashSize: 0.2, gapSize: 0.3,
     });
     scene.add(new THREE.Line(orbitLineGeo, orbitMaterial));
 

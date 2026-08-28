@@ -1,19 +1,22 @@
-import "./App.scss";
-
-import Home from "./home/Home";
-import ParallelDomain from "./parallel-domain/ParallelDomain";
-import Tempo from "./tempo/Tempo";
-import Aerospace from "./aerospace/Aerospace";
-import Education from "./education/Education";
+import Nav from "./components/Nav";
+import Hero from "./components/Hero";
+import Experience from "./components/Experience";
+import Education from "./components/Education";
+import Skills from "./components/Skills";
+import Footer from "./components/Footer";
 
 export default function App() {
   return (
-    <main className="app-scroll">
-      <Home />
-      <ParallelDomain />
-      <Tempo />
-      <Aerospace />
-      <Education />
-    </main>
+    <>
+      <div className="ambient" aria-hidden="true" />
+      <Nav />
+      <main>
+        <Hero />
+        <Experience />
+        <Education />
+        <Skills />
+      </main>
+      <Footer />
+    </>
   );
 }

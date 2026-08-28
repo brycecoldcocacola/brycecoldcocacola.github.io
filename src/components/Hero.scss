@@ -1,0 +1,229 @@
+.hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: 8rem 6rem;
+}
+
+.hero__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: clamp(3rem, 6vw, 5rem);
+}
+
+.hero__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: clamp(1.25rem, 3vw, 2rem);
+}
+
+.hero__eyebrow-sep {
+  color: var(--text-faint);
+}
+
+.hero__location {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.hero__name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(3.2rem, 9vw, 6.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  margin-bottom: clamp(1.25rem, 3vw, 1.75rem);
+
+  em {
+    font-style: italic;
+    color: var(--text-muted);
+  }
+}
+
+.hero__tagline {
+  font-size: clamp(1.3rem, 2.4vw, 1.7rem);
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  max-width: 24ch;
+  margin-bottom: 1.25rem;
+}
+
+.hero__summary {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--text-muted);
+  max-width: 54ch;
+  margin-bottom: clamp(2rem, 4vw, 2.75rem);
+}
+
+.hero__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: clamp(1.25rem, 3vw, 2rem);
+}
+
+.hero__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.hero__status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 var(--accent-line);
+  animation: pulse 2.6s var(--ease-out) infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent-line);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(232, 179, 107, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(232, 179, 107, 0);
+  }
+}
+
+// Portrait
+.hero__portrait {
+  position: relative;
+  justify-self: center;
+  width: min(360px, 78vw);
+}
+
+.hero__portrait-glow {
+  position: absolute;
+  inset: -18% -18% -10%;
+  background: radial-gradient(
+    50% 50% at 50% 40%,
+    var(--accent-soft),
+    transparent 70%
+  );
+  filter: blur(8px);
+  z-index: -1;
+}
+
+.hero__portrait-frame {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  background: linear-gradient(160deg, var(--surface-2), var(--bg-elev));
+  box-shadow:
+    0 30px 60px -20px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+  }
+
+  // soft vignette so the photo settles into the page
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(10, 10, 12, 0.55),
+      transparent 45%
+    );
+    pointer-events: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero__portrait-frame {
+    animation: floaty 9s ease-in-out infinite;
+  }
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+// Scroll cue
+.hero__scroll {
+  position: absolute;
+  left: 50%;
+  bottom: 2rem;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.hero__scroll-label {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.hero__scroll-line {
+  position: relative;
+  width: 1px;
+  height: 46px;
+  background: var(--border-strong);
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 40%;
+    background: var(--accent);
+    animation: scrollLine 2.2s var(--ease) infinite;
+  }
+}
+
+@keyframes scrollLine {
+  0% {
+    transform: translateY(-100%);
+  }
+  60%,
+  100% {
+    transform: translateY(250%);
+  }
+}
+
+@media (min-width: 900px) {
+  .hero__grid {
+    grid-template-columns: 1.1fr 0.9fr;
+  }
+
+  .hero__portrait {
+    width: min(400px, 34vw);
+  }
+}
