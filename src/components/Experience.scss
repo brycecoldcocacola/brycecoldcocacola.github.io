@@ -59,9 +59,9 @@
 .company__name {
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(1.9rem, 3.6vw, 2.6rem);
-  line-height: 1;
-  letter-spacing: -0.01em;
+  font-size: clamp(2.4rem, 5.5vw, 5rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
 
   a {
     color: inherit;
@@ -75,9 +75,9 @@
 }
 
 .company__blurb {
-  margin-top: 0.55rem;
+  margin-top: 0.75rem;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -88,12 +88,13 @@
   position: relative;
   display: grid;
   gap: clamp(1.5rem, 3vw, 2.1rem);
-  padding-left: 1.9rem;
 
+  // Timeline line lives in the left gutter so body text lines up with the
+  // company name and the hero title above it.
   &::before {
     content: "";
     position: absolute;
-    left: 4px;
+    left: -26px;
     top: 8px;
     bottom: 8px;
     width: 1px;
@@ -107,15 +108,13 @@
   &::before {
     content: "";
     position: absolute;
-    left: -1.9rem;
+    left: -30px;
     top: 0.45rem;
     width: 9px;
     height: 9px;
-    margin-left: 0;
     border-radius: 50%;
     background: var(--bg);
     border: 1.5px solid var(--border-strong);
-    transform: translateX(0);
     transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
   }
 
@@ -135,7 +134,7 @@
 }
 
 .role__title {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 600;
   letter-spacing: -0.01em;
   transition: color 0.3s var(--ease);
