@@ -59,18 +59,18 @@ export default function Experience() {
                   ))}
                   {company.skills && <TagRow tags={company.skills} />}
                 </div>
-
-                {company.orbit && (
-                  <div className="company__orbit">
-                    <Suspense fallback={null}>
-                      <SatelliteOrbit />
-                    </Suspense>
-                    <span className="company__orbit-caption">
-                      Low-Earth orbit
-                    </span>
-                  </div>
-                )}
               </div>
+
+              {company.orbit && (
+                <div className="company__orbit">
+                  <Suspense fallback={null}>
+                    <SatelliteOrbit />
+                  </Suspense>
+                  <span className="company__orbit-caption">
+                    Low-Earth orbit
+                  </span>
+                </div>
+              )}
             </Reveal>
           ))}
         </div>

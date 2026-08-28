@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
-// Simplex-like 3D noise for GLSL (simplified)
+// ── GLSL noise ──
 const noiseGLSL = `
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -12,11 +12,9 @@ float snoise(vec3 v) {
   const vec2 C = vec2(1.0/6.0, 1.0/3.0);
   const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
 
-  // First corner
   vec3 i  = floor(v + dot(v, C.yyy));
   vec3 x0 = v - i + dot(i, C.xxx);
 
-  // Other corners
   vec3 g = step(x0.yzx, x0.xyz);
   vec3 l = 1.0 - g;
   vec3 i1 = min(g.xyz, l.zxy);
@@ -26,22 +24,19 @@ float snoise(vec3 v) {
   vec3 x2 = x0 - i2 + C.yyy;
   vec3 x3 = x0 - D.yyy;
 
-  // Permutations
   i = mod289(i);
   vec4 p = permute(permute(permute(
     i.z + vec4(0.0, i1.z, i2.z, 1.0))
     + i.y + vec4(0.0, i1.y, i2.y, 1.0))
     + i.x + vec4(0.0, i1.x, i2.x, 1.0));
 
-  // Gradients: 7x7 points over a square, mapped onto an octahedron.
-  // The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)
-  float n_ = 0.142857142857; // 1.0/7.0
+  float n_ = 0.142857142857;
   vec3 ns = n_ * D.wyz - D.xzx;
 
-  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  // mod(p,7*7)
+  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
 
   vec4 x_ = floor(j * ns.z);
-  vec4 y_ = floor(j - 7.0 * x_);    // mod(j,N)
+  vec4 y_ = floor(j - 7.0 * x_);
 
   vec4 x = x_ * ns.x + ns.yyyy;
   vec4 y = y_ * ns.x + ns.yyyy;
@@ -62,184 +57,270 @@ float snoise(vec3 v) {
   vec3 p2 = vec3(a1.xy,h.z);
   vec3 p3 = vec3(a1.zw,h.w);
 
-  //Normalise gradients
-  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
   p0 *= norm.x;
   p1 *= norm.y;
   p2 *= norm.z;
   p3 *= norm.w;
 
-  // Mix final noise value
   vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
   m = m * m;
-  return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+  return 42.0 * dot(m*m, vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
 }
 
-// Fractal Brownian Motion for layered detail
-float fbm(vec3 p) {
+// 6-octave FBM for richer terrain
+float fbm(vec3 p, int octaves) {
   float value = 0.0;
   float amplitude = 0.5;
   float frequency = 1.0;
-
-  // Layer 1: Large continent-scale features
-  value += snoise(p * frequency) * amplitude;
-  frequency *= 2.0;
-  amplitude *= 0.5;
-
-  // Layer 2: Medium detail (peninsulas, bays)
-  value += snoise(p * frequency) * amplitude;
-  frequency *= 2.0;
-  amplitude *= 0.5;
-
-  // Layer 3: Fine detail (coastal irregularities)
-  value += snoise(p * frequency) * amplitude;
-  frequency *= 2.0;
-  amplitude *= 0.25;
-
+  for (int i = 0; i < 6; i++) {
+    if (i >= octaves) break;
+    value += snoise(p * frequency) * amplitude;
+    frequency *= 2.1;
+    amplitude *= 0.48;
+  }
   return value;
 }
 
-// Latitude-based features (ice caps)
-float latitudeFeature(float y) {
-  float absY = abs(y);
-  // Ice caps at high latitudes (> ~70 degrees, i.e., > 0.95 on sphere)
-  float ice = smoothstep(0.88, 1.0, absY);
-  return ice;
-}
-
-// Elevation-based coloring helper
-vec3 getTerrainColor(float elevation, vec2 uv, float latAbs) {
-  // Ocean (low elevation)
-  if (elevation < -0.05) {
-    // Deep ocean gets slightly darker at poles
-    float depth = smoothstep(-0.4, 0.0, elevation);
-    vec3 deepOcean = vec3(0.02, 0.08, 0.25);
-    vec3 shallowWater = vec3(0.12, 0.28, 0.52);
-    return mix(deepOcean, shallowWater, depth);
-  }
-  
-  // Land
-  float landElev = smoothstep(-0.05, 0.3, elevation);
-  
-  vec3 greenLowland = vec3(0.18, 0.38, 0.15);    // Lush lowlands (tropics)
-  vec3 brownHighland = vec3(0.45, 0.38, 0.22);   // Highland/temperate
-  vec3 desertColor = vec3(0.76, 0.66, 0.43);     // Desert (dry zones)
-  vec3 snowHighland = vec3(0.85, 0.85, 0.88);    // Mountain tops
-  
-  // Base land color based on latitude and elevation
-  vec3 base;
-  if (latAbs < 0.4) {
-    // Tropics: mostly green
-    base = mix(greenLowland, brownHighland, landElev * 0.7);
-    // Some desert near tropics edges
-    float dryness = smoothstep(0.25, 0.5, latAbs) * (1.0 - smoothstep(0.4, 0.6, latAbs));
-    base = mix(base, desertColor, dryness * 0.3);
-  } else if (latAbs < 0.7) {
-    // Temperate: green to brown
-    float tempGreen = smoothstep(0.5, 0.8, 1.0 - latAbs);
-    base = mix(greenLowland * 0.9 + vec3(0.1, 0.05, 0.0), brownHighland, 1.0 - tempGreen);
-  } else {
-    // Polar: brown to snow
-    float polarFactor = smoothstep(0.7, 0.95, latAbs);
-    base = mix(brownHighland * 0.6 + vec3(-0.02, 0.01, -0.02), snowHighland, polarFactor);
-  }
-  
-  // Add elevation detail
-  float detail = smoothstep(0.15, 0.4, elevation);
-  base = mix(base, snowHighland * 0.7 + vec3(0.1, 0.08, 0.05), detail * 0.6);
-  
-  return base;
+// Domain warping for more organic shapes
+float warpedFbm(vec3 p) {
+  vec3 q = p * 1.0;
+  float w1 = snoise(q * 0.8 + vec3(1.7, 4.2, 2.1)) * 0.4;
+  float w2 = snoise(q * 0.8 + vec3(8.3, 2.5, 6.1)) * 0.4;
+  vec3 warped = p + vec3(w1, w2, w1 * w2) * 0.5;
+  return fbm(warped, 6);
 }
 `;
 
+// ── Earth shader ──
 const earthVertexShader = `
 varying vec3 vWorldPos;
 varying vec3 vNormal;
-varying vec2 vUv;
+varying vec3 vViewDir;
 void main() {
-  vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
-  vNormal = normal;
-  vUv = uv;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  vec4 wp = modelMatrix * vec4(position, 1.0);
+  vWorldPos = wp.xyz;
+  vNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+  vViewDir = normalize(cameraPosition - wp.xyz);
+  gl_Position = projectionMatrix * viewMatrix * wp;
 }
 `;
 
 const earthFragmentShader = `
+uniform vec3 uSunDir;
 varying vec3 vWorldPos;
 varying vec3 vNormal;
-varying vec2 vUv;
+varying vec3 vViewDir;
 
 ${noiseGLSL}
 
 void main() {
-  // Convert UV to a point on the sphere for noise (avoids pole artifacts)
-  vec3 norm = normalize(vNormal);
-  
-  // FBM for continent shapes
-  float elevation = fbm(norm * 1.2 + vec3(0.5, 0.2, 0.8));
-  
-  // Blend between two noise layers to create more realistic coastlines
-  float e2 = fbm(norm * 1.2 + vec3(-0.3, 0.7, 1.2));
-  elevation = mix(elevation, e2, 0.4);
-  
-  // Latitude for ice caps and climate zones
-  float latAbs = abs(vNormal.y);
-  
-  // Get terrain color based on elevation and latitude
-  vec3 surfaceColor = getTerrainColor(elevation, vUv, latAbs);
-  
-  // Apply ice cap overlay
-  float iceCap = latitudeFeature(norm.y);
-  vec3 iceColor = vec3(0.92, 0.94, 0.96);
+  vec3 n = normalize(vNormal);
+
+  // Elevation with domain warping for organic continents
+  float e1 = fbm(n * 1.1 + vec3(0.3, 0.7, 0.5), 5);
+  float e2 = fbm(n * 2.3 + vec3(-1.2, 0.4, 2.1), 4);
+  float elevation = e1 + e2 * 0.3;
+
+  // Sharpen coastlines
+  float coast = smoothstep(-0.02, 0.04, elevation);
+
+  // Latitude
+  float latAbs = abs(n.y);
+
+  // ── Ocean ──
+  vec3 deepOcean = vec3(0.008, 0.04, 0.12);
+  vec3 shallowOcean = vec3(0.04, 0.14, 0.28);
+  float oceanDepth = smoothstep(-0.5, -0.02, elevation);
+  vec3 oceanColor = mix(deepOcean, shallowOcean, oceanDepth);
+
+  // ── Land biomes ──
+  float landDetail = smoothstep(0.04, 0.25, elevation);
+  float mountains = smoothstep(0.25, 0.55, elevation);
+
+  // Moisture noise for biome variation
+  float moisture = snoise(n * 3.2 + vec3(5.1, 2.3, 7.8)) * 0.5 + 0.5;
+
+  vec3 tropical = vec3(0.08, 0.28, 0.06);
+  vec3 temperate = vec3(0.12, 0.22, 0.08);
+  vec3 arid = vec3(0.38, 0.30, 0.14);
+  vec3 tundra = vec3(0.25, 0.27, 0.24);
+  vec3 snow = vec3(0.72, 0.74, 0.78);
+
+  // Tropical/temperate band (equator to mid-lat)
+  vec3 landBase = mix(tropical, temperate, smoothstep(0.15, 0.45, latAbs));
+  // Arid zones (around 25-40 degrees)
+  float aridBand = smoothstep(0.25, 0.38, latAbs) * (1.0 - smoothstep(0.45, 0.6, latAbs));
+  float dryness = (1.0 - moisture) * aridBand;
+  landBase = mix(landBase, arid, dryness * 0.7);
+  // Tundra / polar
+  landBase = mix(landBase, tundra, smoothstep(0.6, 0.8, latAbs));
+  // Mountains → snow
+  landBase = mix(landBase, snow, mountains);
+  // Snow caps at high elevation regardless of latitude
+  float snowCap = smoothstep(0.35, 0.6, elevation);
+  landBase = mix(landBase, snow, snowCap * (1.0 - smoothstep(0.0, 0.3, latAbs)));
+
+  // Blend land/ocean
+  vec3 surfaceColor = mix(oceanColor, landBase, coast);
+
+  // ── Ice caps ──
+  float iceCap = smoothstep(0.82, 0.95, latAbs);
+  vec3 iceColor = vec3(0.85, 0.88, 0.92);
   surfaceColor = mix(surfaceColor, iceColor, iceCap);
-  
-  // Add subtle specular for ocean (water reflection)
-  float isOcean = smoothstep(-0.1, -0.05, elevation);
-  vec3 lightDir = normalize(vec3(8.0, 4.0, 6.0));
-  vec3 viewDir = normalize(cameraPosition - vWorldPos);
-  vec3 halfDir = normalize(lightDir + viewDir);
-  float spec = pow(max(dot(normalize(vNormal), halfDir), 0.0), 40.0);
-  surfaceColor += vec3(0.3, 0.35, 0.4) * spec * isOcean;
-  
-  // Subtle ambient occlusion at edges (Fresnel darkening on the terminator side)
-  float terminator = dot(normalize(vNormal), normalize(vec3(-1.0, -0.2, -0.8)));
-  float shadow = smoothstep(0.0, -0.5, terminator);
-  surfaceColor *= mix(1.0, 0.4, shadow);
-  
-  gl_FragColor = vec4(surfaceColor, 1.0);
+
+  // ── Lighting ──
+  float nDotL = dot(n, uSunDir);
+  float dayLight = smoothstep(-0.15, 0.2, nDotL);
+  float terminator = smoothstep(-0.05, 0.15, nDotL);
+
+  // Ambient (dark side not fully black)
+  vec3 ambient = surfaceColor * 0.04;
+
+  // Diffuse
+  vec3 diffuse = surfaceColor * max(nDotL, 0.0) * 0.9;
+
+  // Specular on ocean only
+  vec3 halfVec = normalize(uSunDir + vViewDir);
+  float spec = pow(max(dot(n, halfVec), 0.0), 80.0);
+  float oceanMask = 1.0 - coast;
+  vec3 specular = vec3(0.6, 0.7, 0.9) * spec * oceanMask * dayLight * 0.8;
+
+  vec3 lit = ambient + diffuse + specular;
+
+  // ── Night side city lights (on land, dark side) ──
+  float nightMask = 1.0 - terminator;
+  float cityNoise = snoise(n * 28.0 + vec3(1.3, 5.7, 3.2));
+  float cityMask = smoothstep(0.7, 0.85, cityNoise) * coast;
+  // Concentrate near coasts (where elevation is low land)
+  float nearCoast = smoothstep(0.12, 0.04, elevation) * coast;
+  cityMask = max(cityMask * 0.6, nearCoast * smoothstep(0.55, 0.75, cityNoise));
+  vec3 cityLight = vec3(1.0, 0.85, 0.5) * cityMask * nightMask * 0.4;
+
+  // Terminator warmth
+  float termWarmth = smoothstep(0.0, 0.12, nDotL) * (1.0 - smoothstep(0.12, 0.3, nDotL));
+  vec3 termColor = vec3(0.35, 0.12, 0.04) * termWarmth * 0.3 * coast;
+
+  gl_FragColor = vec4(lit + cityLight + termColor, 1.0);
 }
 `;
 
 // ── Cloud shader ──
 const cloudVertexShader = `
-varying vec2 vUv;
+varying vec3 vNormal;
+varying vec3 vWorldPos;
 void main() {
-  vUv = uv;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  vec4 wp = modelMatrix * vec4(position, 1.0);
+  vWorldPos = wp.xyz;
+  vNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+  gl_Position = projectionMatrix * viewMatrix * wp;
 }
 `;
 
 const cloudFragmentShader = `
-varying vec2 vUv;
 uniform float uTime;
+uniform vec3 uSunDir;
+varying vec3 vNormal;
+varying vec3 vWorldPos;
 
 ${noiseGLSL}
 
 void main() {
-  // Create swirling cloud patterns using layered noise
-  vec3 p = vec3(vUv * 4.5, uTime * 0.015);
-  
-  float n = snoise(p) * 0.6;
-  n += snoise(p * 2.0 + vec3(7.0, 3.0, 0.0)) * 0.3;
-  n += snoise(p * 4.0 + vec3(13.0, 5.0, 0.0)) * 0.1;
-  
-  // Shape into realistic cloud formations
-  float cloud = smoothstep(0.05, 0.5, n);
-  
-  // Fade near poles (less cloud cover in polar regions)
-  float latFade = smoothstep(0.9, 0.7, abs(vUv.y - 0.5));
-  
-  gl_FragColor = vec4(1.0, 1.0, 1.0, cloud * 0.35 * latFade);
+  vec3 n = normalize(vNormal);
+  // Scroll clouds slowly
+  vec3 p = n * 2.5 + vec3(uTime * 0.008, 0.0, uTime * 0.003);
+
+  float n1 = snoise(p) * 0.5;
+  float n2 = snoise(p * 2.1 + vec3(3.7, 1.2, 5.4)) * 0.3;
+  float n3 = snoise(p * 4.3 + vec3(8.1, 6.3, 2.7)) * 0.15;
+  float n4 = snoise(p * 8.7 + vec3(2.2, 9.5, 4.1)) * 0.05;
+
+  float cloudDensity = n1 + n2 + n3 + n4;
+
+  // Shape clouds - use smoothstep for fluffy edges
+  float cloud = smoothstep(0.1, 0.55, cloudDensity);
+
+  // Reduce clouds near poles
+  float latFade = smoothstep(0.9, 0.75, abs(n.y));
+  cloud *= latFade;
+
+  // Cloud lighting
+  float nDotL = dot(n, uSunDir);
+  float cloudLight = smoothstep(-0.1, 0.3, nDotL);
+
+  // Cloud color: white lit, grey shadowed
+  vec3 cloudColor = mix(vec3(0.35, 0.38, 0.45), vec3(1.0, 0.98, 0.95), cloudLight);
+
+  // Cloud shadows on earth (handled via opacity)
+  float alpha = cloud * 0.5;
+
+  gl_FragColor = vec4(cloudColor, alpha);
+}
+`;
+
+// ── Atmosphere shaders ──
+const atmosVertexShader = `
+varying vec3 vNormal;
+varying vec3 vWorldPos;
+void main() {
+  vec4 wp = modelMatrix * vec4(position, 1.0);
+  vWorldPos = wp.xyz;
+  vNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+  gl_Position = projectionMatrix * viewMatrix * wp;
+}
+`;
+
+const atmosFragmentShader = `
+uniform vec3 uSunDir;
+varying vec3 vNormal;
+varying vec3 vWorldPos;
+
+void main() {
+  vec3 viewDir = normalize(cameraPosition - vWorldPos);
+  vec3 n = normalize(vNormal);
+
+  // Fresnel - how much we look through atmosphere
+  float fresnel = 1.0 - dot(n, viewDir);
+  fresnel = pow(fresnel, 3.5);
+
+  // Sun-facing glow (stronger where sun hits atmosphere)
+  float sunFacing = max(dot(n, uSunDir), 0.0);
+  float limbGlow = fresnel * (0.3 + sunFacing * 0.7);
+
+  // Blue-dominant atmospheric scattering
+  vec3 atmosColor = vec3(0.2, 0.5, 1.0) * limbGlow;
+
+  // Warm band near terminator (subtle sunset)
+  float nDotL = dot(n, uSunDir);
+  float termBand = smoothstep(-0.05, 0.15, nDotL) * (1.0 - smoothstep(0.15, 0.4, nDotL));
+  vec3 sunsetColor = vec3(1.0, 0.4, 0.15) * termBand * fresnel * 0.6;
+
+  vec3 finalColor = atmosColor + sunsetColor;
+
+  gl_FragColor = vec4(finalColor, fresnel * 0.7);
+}
+`;
+
+// Outer glow (larger sphere, very soft)
+const outerAtmosFragmentShader = `
+uniform vec3 uSunDir;
+varying vec3 vNormal;
+varying vec3 vWorldPos;
+
+void main() {
+  vec3 viewDir = normalize(cameraPosition - vWorldPos);
+  vec3 n = normalize(vNormal);
+
+  float fresnel = 1.0 - dot(n, viewDir);
+  fresnel = pow(fresnel, 2.0);
+
+  // Very soft outer glow
+  float sunFacing = max(dot(n, uSunDir), 0.0);
+  float intensity = fresnel * (0.05 + sunFacing * 0.12);
+
+  vec3 glowColor = vec3(0.15, 0.4, 0.9) * intensity;
+
+  gl_FragColor = vec4(glowColor, intensity * 0.5);
 }
 `;
 
@@ -258,172 +339,179 @@ export default function SatelliteOrbit() {
     const scene = new THREE.Scene();
 
     // Camera
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 2000);
-    camera.position.set(0, 3, 7);
-    camera.lookAt(0, 0, 0);
+    const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 2000);
+    camera.position.set(0, 1.5, 6.5);
+    camera.lookAt(0, -0.2, 0);
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
+    renderer.toneMappingExposure = 1.1;
     container.appendChild(renderer.domElement);
 
+    // Sun direction
+    const sunDir = new THREE.Vector3(1.0, 0.3, 0.6).normalize();
+
     // ── Stars ──
-    const starCount = 3000;
+    const starCount = 4000;
     const starGeo = new THREE.BufferGeometry();
     const starPositions = new Float32Array(starCount * 3);
+    const starSizes = new Float32Array(starCount);
     for (let i = 0; i < starCount; i++) {
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      const r = 400 + Math.random() * 600;
+      const r = 500 + Math.random() * 500;
       starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       starPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
       starPositions[i * 3 + 2] = r * Math.cos(phi);
+      starSizes[i] = Math.random() * 1.5 + 0.3;
     }
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
     const starMat = new THREE.PointsMaterial({
-      color: 0xffffff, size: 0.8, sizeAttenuation: true, transparent: true, opacity: 0.9,
+      color: 0xffffff, size: 0.7, sizeAttenuation: true, transparent: true, opacity: 0.85,
     });
     scene.add(new THREE.Points(starGeo, starMat));
 
-    // ── Earth with procedural shader (realistic continents!) ──
+    // ── Earth ──
     const earthGroup = new THREE.Group();
 
-    // Procedural Earth sphere using custom shader
-    const earthGeo = new THREE.SphereGeometry(2, 128, 64);
+    const earthGeo = new THREE.SphereGeometry(2.2, 128, 64);
     const earthMat = new THREE.ShaderMaterial({
       vertexShader: earthVertexShader,
       fragmentShader: earthFragmentShader,
+      uniforms: {
+        uSunDir: { value: sunDir },
+      },
     });
     earthGroup.add(new THREE.Mesh(earthGeo, earthMat));
 
-    // Cloud layer (also procedural shader)
-    const cloudGeo = new THREE.SphereGeometry(2.06, 64, 32);
+    // Clouds
+    const cloudGeo = new THREE.SphereGeometry(2.25, 96, 48);
     const cloudMat = new THREE.ShaderMaterial({
       vertexShader: cloudVertexShader,
       fragmentShader: cloudFragmentShader,
-      uniforms: { uTime: { value: 0 } },
+      uniforms: {
+        uTime: { value: 0 },
+        uSunDir: { value: sunDir },
+      },
       transparent: true,
       depthWrite: false,
     });
     const clouds = new THREE.Mesh(cloudGeo, cloudMat);
     earthGroup.add(clouds);
 
-    // ── Atmosphere glow (Fresnel shader) ──
-    const atmosGeo = new THREE.SphereGeometry(2.35, 64, 32);
+    // Inner atmosphere (tight glow on the limb)
+    const atmosGeo = new THREE.SphereGeometry(2.32, 64, 32);
     const atmosMat = new THREE.ShaderMaterial({
-      vertexShader: `
-        varying vec3 vNormal;
-        varying vec3 vPositionView;
-        void main() {
-          vNormal = normalize(normalMatrix * normal);
-          vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-          vPositionView = -mvPos.xyz;
-          gl_Position = projectionMatrix * mvPos;
-        }
-      `,
-      fragmentShader: `
-        varying vec3 vNormal;
-        varying vec3 vPositionView;
-        void main() {
-          float fresnel = 1.0 - dot(normalize(vNormal), normalize(vPositionView));
-          fresnel = pow(fresnel, 2.5);
-          vec3 atmosColor = mix(vec3(0.95, 0.6, 0.35), vec3(1.0, 0.82, 0.55), fresnel);
-          gl_FragColor = vec4(atmosColor, fresnel * 0.6);
-        }
-      `,
-      transparent: true, side: THREE.BackSide, depthWrite: false,
+      vertexShader: atmosVertexShader,
+      fragmentShader: atmosFragmentShader,
+      uniforms: { uSunDir: { value: sunDir } },
+      transparent: true,
+      side: THREE.BackSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
     });
     earthGroup.add(new THREE.Mesh(atmosGeo, atmosMat));
 
+    // Outer atmosphere (softer, wider glow)
+    const outerAtmosGeo = new THREE.SphereGeometry(2.6, 64, 32);
+    const outerAtmosMat = new THREE.ShaderMaterial({
+      vertexShader: atmosVertexShader,
+      fragmentShader: outerAtmosFragmentShader,
+      uniforms: { uSunDir: { value: sunDir } },
+      transparent: true,
+      side: THREE.BackSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    earthGroup.add(new THREE.Mesh(outerAtmosGeo, outerAtmosMat));
+
+    earthGroup.position.y = -0.3;
     scene.add(earthGroup);
 
-    // ── Orbit Ring (subtle dashed) ──
-    const orbitRadius = 4.2;
+    // ── Orbit ring ──
+    const orbitRadius = 3.6;
     const orbitCurve = new THREE.EllipseCurve(0, 0, orbitRadius, orbitRadius, 0, 2 * Math.PI, false, 0);
     const orbitPoints = orbitCurve.getPoints(128);
     const orbitLineGeo = new THREE.BufferGeometry().setFromPoints(orbitPoints.map(p => new THREE.Vector3(p.x, 0, p.y)));
     const orbitMaterial = new THREE.LineDashedMaterial({
-      color: 0xe8b36b, transparent: true, opacity: 0.2, dashSize: 0.2, gapSize: 0.3,
+      color: 0xe8b36b, transparent: true, opacity: 0.15, dashSize: 0.2, gapSize: 0.4,
     });
-    scene.add(new THREE.Line(orbitLineGeo, orbitMaterial));
+    const orbitLine = new THREE.Line(orbitLineGeo, orbitMaterial);
+    orbitLine.computeLineDistances();
+    orbitLine.position.y = -0.3;
+    scene.add(orbitLine);
 
     // ── Satellite ──
     const satGroup = new THREE.Group();
 
-    const bodyMat = new THREE.MeshPhongMaterial({ color: 0x888899, shininess: 60 });
-    const panelMat = new THREE.MeshPhongMaterial({ color: 0x1a1a6e, emissive: 0x1122aa, emissiveIntensity: 0.3, shininess: 90 });
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.4, metalness: 0.8 });
+    const panelMat = new THREE.MeshStandardMaterial({ color: 0x1a1a8e, emissive: 0x112266, emissiveIntensity: 0.4, roughness: 0.3, metalness: 0.6 });
 
-    satGroup.add(new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.25), bodyMat));
-    const panelL = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.01, 0.12), panelMat);
-    panelL.position.x = -0.3;
+    satGroup.add(new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, 0.22), bodyMat));
+    const panelL = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.008, 0.11), panelMat);
+    panelL.position.x = -0.28;
     satGroup.add(panelL);
-    const panelR = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.01, 0.12), panelMat);
-    panelR.position.x = 0.3;
+    const panelR = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.008, 0.11), panelMat);
+    panelR.position.x = 0.28;
     satGroup.add(panelR);
 
-    // Antenna dish
-    const antennaMat = new THREE.MeshPhongMaterial({ color: 0xcccccc });
-    const antennaMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.15, 8), antennaMat);
-    antennaMesh.position.y = 0.15;
-    satGroup.add(antennaMesh);
+    const dishMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.5 });
+    const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.12, 8), dishMat);
+    antenna.position.y = 0.14;
+    satGroup.add(antenna);
 
-    const dishGeo = new THREE.SphereGeometry(0.06, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.4);
-    const dish = new THREE.Mesh(dishGeo, new THREE.MeshPhongMaterial({ color: 0xeeeeee, side: THREE.DoubleSide }));
-    dish.position.y = 0.22;
+    const dishGeo = new THREE.SphereGeometry(0.05, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.4);
+    const dish = new THREE.Mesh(dishGeo, new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, roughness: 0.6 }));
+    dish.position.y = 0.2;
     dish.rotation.x = Math.PI;
     satGroup.add(dish);
 
     scene.add(satGroup);
 
-    // ── Lights (for satellite only, earth uses its own shader) ──
-    scene.add(new THREE.AmbientLight(0x223344, 0.4));
-    const sunLight = new THREE.DirectionalLight(0xffeedd, 2.5);
-    sunLight.position.set(8, 4, 6);
+    // Lights for satellite
+    scene.add(new THREE.AmbientLight(0x223355, 0.3));
+    const sunLight = new THREE.DirectionalLight(0xffeedd, 2.0);
+    sunLight.position.copy(sunDir).multiplyScalar(100);
     scene.add(sunLight);
-    const fillLight = new THREE.DirectionalLight(0x334466, 0.15);
-    fillLight.position.set(-5, -2, -4);
-    scene.add(fillLight);
 
     // ── Animation ──
     const start = performance.now();
     let prevTime = performance.now();
+    let running = true;
 
     function animate() {
+      if (!running) return;
       animRef.current = requestAnimationFrame(animate);
 
       const now = performance.now();
-      // Clamp delta so returning to the tab (or resuming after the observer
-      // paused the loop) doesn't cause a huge jump in rotation.
       const dt = Math.min((now - prevTime) / 1000, 0.1);
       prevTime = now;
       const elapsed = (now - start) / 1000;
 
-      // Rotate Earth slowly, clouds slightly faster for parallax
-      earthGroup.rotation.y += dt * 0.03;
-      clouds.rotation.y += dt * 0.04;
+      earthGroup.rotation.y += dt * 0.02;
+      clouds.rotation.y += dt * 0.028;
 
-      // Cloud animation
       cloudMat.uniforms.uTime.value = elapsed;
 
-      // Satellite orbit (absolute position from elapsed time)
-      const angle = elapsed * 0.3;
+      // Satellite orbit
+      const angle = elapsed * 0.25;
       satGroup.position.set(
         Math.cos(angle) * orbitRadius,
-        Math.sin(elapsed * 0.6) * 0.4,
+        Math.sin(elapsed * 0.5) * 0.3 - 0.3,
         Math.sin(angle) * orbitRadius,
       );
-      satGroup.lookAt(0, 0, 0);
-      satGroup.rotation.z = Math.sin(elapsed * 1.5) * 0.1;
+      satGroup.lookAt(0, -0.3, 0);
+      satGroup.rotation.z = Math.sin(elapsed * 1.2) * 0.08;
 
       renderer.render(scene, camera);
     }
 
     animate();
 
-    // ── Resize handler ──
+    // ── Resize ──
     const handleResize = () => {
       if (!container) return;
       const w = container.clientWidth || window.innerWidth;
@@ -434,29 +522,32 @@ export default function SatelliteOrbit() {
     };
     window.addEventListener('resize', handleResize);
 
-    // ── Pause when off-screen ──
-    let visible = true;
+    // ── Pause off-screen ──
     const observer = new IntersectionObserver(
       (entries) => {
-        if (!visible && entries[0].isIntersecting) { animate(); visible = true; }
-        else if (visible && !entries[0].isIntersecting) { cancelAnimationFrame(animRef.current); animRef.current = null; visible = false; }
+        if (entries[0].isIntersecting) {
+          running = true;
+          prevTime = performance.now();
+          animate();
+        } else {
+          running = false;
+          if (animRef.current) cancelAnimationFrame(animRef.current);
+        }
       },
-      { threshold: 0.1 }
+      { threshold: 0.05 }
     );
     observer.observe(container);
 
     return () => {
+      running = false;
       if (animRef.current) cancelAnimationFrame(animRef.current);
       window.removeEventListener('resize', handleResize);
       observer.disconnect();
-
-      // Release GPU resources for every mesh in the scene
       scene.traverse((obj) => {
         if (obj.geometry) obj.geometry.dispose();
         const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
-        materials.forEach((material) => material && material.dispose());
+        materials.forEach((m) => m && m.dispose());
       });
-
       if (container && renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
       }
