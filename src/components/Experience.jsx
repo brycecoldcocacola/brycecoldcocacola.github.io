@@ -43,21 +43,23 @@ export default function Experience() {
         <div className="experience__list">
           {experience.map((company, i) => (
             <Reveal key={company.company} className={`company ${company.orbit ? "company--feature" : ""}`} delay={i * 60}>
-              <div className="company__head">
-                <div className="company__id">
-                  <h3 className="company__name">{company.company}</h3>
-                  {company.blurb && (
-                    <p className="company__blurb">{company.blurb}</p>
-                  )}
+              <div className="company__content">
+                <div className="company__head">
+                  <div className="company__id">
+                    <h3 className="company__name">{company.company}</h3>
+                    {company.blurb && (
+                      <p className="company__blurb">{company.blurb}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="company__body">
-                <div className="company__roles">
-                  {company.roles.map((role) => (
-                    <Role key={role.title} {...role} />
-                  ))}
-                  {company.skills && <TagRow tags={company.skills} />}
+                <div className="company__body">
+                  <div className="company__roles">
+                    {company.roles.map((role) => (
+                      <Role key={role.title} {...role} />
+                    ))}
+                    {company.skills && <TagRow tags={company.skills} />}
+                  </div>
                 </div>
               </div>
 

@@ -167,10 +167,11 @@
   }
 }
 
-// Scrollbar
+// Scrollbar + paged scroll-snapping
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
+    scroll-snap-type: y proximity;
   }
 }
 
