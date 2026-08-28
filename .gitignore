@@ -1,3 +1,12 @@
 node_modules/
 dist/
 .DS_Store
+# visual-iteration scratch artifacts
+screenshot*.png
+shot-*.png
+burst_*.png
+Screenshot *.png
+shot-downres.mjs
+shot-aero.mjs
+shot-burst.mjs
+shot-console.mjs
