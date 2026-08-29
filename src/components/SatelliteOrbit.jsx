@@ -90,9 +90,9 @@ void main() {
 
 // ── Meteor: a round glowing head + long dissipating additive trail ──────────
 class Meteor {
-  constructor({ radius, inclination, node, speed, phase, color, tail }, sprite) {
-    this.radius = radius;
-    this.inc = inclination;
+  constructor({ r, inc, node, speed, phase, color, tail }, sprite) {
+    this.radius = r;
+    this.inc = inc;
     this.node = node;
     this.speed = speed;
     this.phase = phase;
