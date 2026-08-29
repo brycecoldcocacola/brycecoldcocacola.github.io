@@ -175,6 +175,22 @@
   }
 }
 
+// Scale rem-based typography and layout up on large displays so the design
+// doesn't look tiny / sparse on a big monitor (e.g. 27" 4K).
+@media (min-width: 1600px) {
+  html {
+    font-size: 18px;
+  }
+}
+@media (min-width: 2000px) {
+  html {
+    font-size: 20px;
+  }
+  :root {
+    --shell: 1280px;
+  }
+}
+
 // Each major section is its own scroll-snap page so scrolling feels
 // consistent throughout the site instead of mixing free + paged scroll.
 .hero,
