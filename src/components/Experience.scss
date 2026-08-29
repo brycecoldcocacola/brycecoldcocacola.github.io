@@ -38,12 +38,64 @@
     repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.045) 0 1px, transparent 1px 44px);
 }
 
-// Tempo — energetic home-gym gradient.
+// Tempo — cinematic duotone backdrop built from tempo.fit media, anchored to the
+// right so the text column stays on an opaque scrim.
 .company--tempo .company__bg {
-  background:
-    radial-gradient(circle 55% 50% at 80% 26%, rgba(244, 114, 182, 0.10), transparent 70%),
-    radial-gradient(circle 50% 48% at 15% 74%, rgba(168, 85, 247, 0.09), transparent 70%),
-    repeating-linear-gradient(135deg, rgba(244, 114, 182, 0.035) 0 2px, transparent 2px 20px);
+  overflow: hidden;
+  background: #07070a;
+
+  // Left-of-center is fully opaque (crisp text), then a graded scrim lets the
+  // footage glow back in on the right. Magenta/violet tint + top/bottom fade.
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background:
+      linear-gradient(
+        90deg,
+        rgba(7, 7, 10, 1) 0%,
+        rgba(7, 7, 10, 0.99) 46%,
+        rgba(7, 7, 10, 0.66) 56%,
+        rgba(7, 7, 10, 0.26) 74%,
+        rgba(7, 7, 10, 0.1) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(7, 7, 10, 0.96) 0%,
+        rgba(7, 7, 10, 0) 22%,
+        rgba(7, 7, 10, 0) 58%,
+        rgba(7, 7, 10, 1) 100%
+      ),
+      radial-gradient(circle 50% 60% at 74% 28%, rgba(244, 114, 182, 0.12), transparent 72%),
+      radial-gradient(circle 45% 55% at 40% 78%, rgba(168, 85, 247, 0.08), transparent 72%);
+  }
+}
+
+.company__media {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 38% center;
+  z-index: 1;
+  opacity: 0.62;
+  // Heavy grade so the footage reads as an ambient backdrop, not as UI.
+  filter: grayscale(0.32) contrast(1.06) brightness(0.46) saturate(1.35);
+  animation: tempoZoom 30s ease-in-out infinite alternate;
+  transform-origin: center right;
+}
+
+@keyframes tempoZoom {
+  from {
+    transform: scale(1.05);
+  }
+  to {
+    transform: scale(1.18);
+  }
 }
 
 .company__head {
@@ -171,6 +223,17 @@
   margin-inline: auto;
   /* let the text overlap the earth's left edge a touch */
   padding-right: clamp(0rem, 12vw, 16rem);
+}
+
+// Keep the Tempo text column left-aligned within a constrained band so the
+// footage panel on the right never collides with the date labels.
+.company--tempo .company__content {
+  max-width: none;
+  width: min(50%, 600px);
+  margin-inline-start: clamp(1.25rem, 6vw, 6rem);
+  margin-inline-end: 0;
+  padding-right: 0;
+  text-align: left;
 }
 
 .company__orbit {

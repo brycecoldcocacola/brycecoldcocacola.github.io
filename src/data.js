@@ -35,6 +35,14 @@ export const experience = [
     theme: "tempo",
     highlight: true,
     blurb: "AI-powered home gym & virtual personal training",
+    backdrop: {
+      // DatoCMS media served by tempo.fit — body-scan / computer-vision clip.
+      // Poster (webp) loads first, autoplay video layers on top of it.
+      poster:
+        "https://www.datocms-assets.com/135987/1723905350-02_ai-trainer_d-min.webp",
+      video:
+        "https://www.datocms-assets.com/135987/1723905352-07_bodyscan_d.mp4",
+    },
     roles: [
       {
         title: "Tech Lead Manager",

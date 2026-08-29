@@ -47,7 +47,21 @@ export default function Experience() {
               className={`company ${company.theme ? `company--${company.theme}` : ""}`}
               delay={i * 60}
             >
-              <div className="company__bg" aria-hidden="true" />
+              <div className="company__bg" aria-hidden="true">
+                {company.backdrop && (
+                  <video
+                    className="company__media"
+                    poster={company.backdrop.poster}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                  >
+                    <source src={company.backdrop.video} type="video/mp4" />
+                  </video>
+                )}
+              </div>
               <div className="company__content">
                 <div className="company__head">
                   <div className="company__id">
