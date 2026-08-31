@@ -42,38 +42,38 @@ void main() {
   float ocean = texture2D(uSpec, vUv).r;
 
   float nDotL = dot(n, uSunDir);
-  // Soft, slightly wide day/night terminator.
-  float dayLight = smoothstep(-0.12, 0.32, nDotL);
+  // Soft day/night terminator with a gentle wrap so the shading feels diffuse.
+  float dayLight = smoothstep(-0.18, 0.34, nDotL);
 
   // --- Night side: deep blue-black with glowing city lights ---
-  vec3 nightCol = night.rgb * 2.0;
-  nightCol += vec3(0.010, 0.018, 0.045);   // faint ambient so water isn't pure black
+  vec3 nightCol = night.rgb * 1.9;
+  nightCol += vec3(0.012, 0.016, 0.042);   // faint ambient so water isn't pure black
 
-  // --- Day side ---
-  // Deepen the water so oceans read blue instead of pale land.
-  float water = clamp(ocean * day.r * 1.4, 0.0, 0.7);
-  vec3 dayCol = mix(day.rgb, day.rgb * vec3(0.42, 0.60, 0.92), water);
-  dayCol *= 1.06;
-  // Lambertian falloff so the limb isn't blown out.
-  dayCol *= mix(0.50, 1.0, clamp(nDotL, 0.0, 1.0));
+  // --- Day side: diffuse lighting, deep-blue oceans, natural land ---
+  vec3 dayCol = day.rgb;
+  float water = clamp(ocean * day.r * 1.5, 0.0, 0.85);
+  dayCol = mix(dayCol, dayCol * vec3(0.34, 0.55, 0.95), water);
+  dayCol *= 1.1;
+  // Soft wrap lighting: a touch of light bleeds past the terminator.
+  float wrap = clamp((nDotL + 0.25) / 1.25, 0.0, 1.0);
+  dayCol *= mix(0.42, 1.0, wrap);
 
   vec3 base = mix(nightCol, dayCol, dayLight);
 
-  // Warm sunset band across the terminator.
-  float term = smoothstep(-0.22, 0.0, nDotL) * (1.0 - smoothstep(0.0, 0.22, nDotL));
-  base += vec3(0.32, 0.14, 0.05) * term * 0.55;
+  // Subtle warm sunset band across the terminator.
+  float term = smoothstep(-0.12, 0.06, nDotL) * (1.0 - smoothstep(0.06, 0.26, nDotL));
+  base += vec3(0.35, 0.15, 0.04) * term * 0.55;
 
-  // --- Ocean sun-glint (master-maps style): tight Blinn-Phong on water only ---
+  // --- Soft sun glint on ocean: moderately broad, kept dim so bloom stays small ---
   vec3 halfVec = normalize(uSunDir + viewDir);
   float ndh = max(dot(n, halfVec), 0.0);
-  float glint = pow(ndh, 220.0) + pow(ndh, 48.0) * 0.08;
-  base += vec3(1.0, 0.94, 0.82) * glint * ocean * dayLight * 0.85;
+  float glint = pow(ndh, 90.0) * 0.45;
+  base += vec3(1.0, 0.98, 0.92) * glint * ocean * dayLight;
 
-  // --- Fresnel sky reflection on water in daylight (adds depth) ---
+  // Fresnel blue limb tint, brighter on the sunlit limb.
   float fres = pow(1.0 - max(dot(viewDir, n), 0.0), 4.0);
-  base += vec3(0.16, 0.32, 0.6) * fres * ocean * dayLight * 0.5;
-  // Faint blue limb on land too.
-  base += vec3(0.12, 0.26, 0.55) * fres * 0.18;
+  float sunLimb = clamp(dot(n, uSunDir), 0.0, 1.0);
+  base += vec3(0.16, 0.42, 1.0) * fres * (0.15 + 0.85 * sunLimb) * 0.9;
 
   gl_FragColor = vec4(base, 1.0);
 }
@@ -132,14 +132,11 @@ varying vec3 vWorldPos;
 void main() {
   vec3 viewDir = normalize(cameraPosition - vWorldPos);
   vec3 n = normalize(vNormal);
-  // Limb glow via fresnel (BackSide shell -> brightest toward the silhouette),
-  // kept broad and soft so it reads as atmosphere rather than a hard ring.
-  float fresnel = pow(clamp(1.0 - dot(n, viewDir), 0.0, 1.0), 2.3);
+  // Broad, very soft fresnel so the shell reads as an atmosphere halo, not a ring.
+  float fresnel = pow(clamp(1.0 - dot(n, viewDir), 0.0, 1.0), 2.4);
+  // Sun-exposed limbs glow warmer/brighter; night-side halo is dim but present.
   float sun = clamp(dot(n, uSunDir), 0.0, 1.0);
-  // Mie-like forward scatter: the halo blooms toward the sun.
-  float mie = pow(max(dot(viewDir, -normalize(uSunDir)), 0.0), 4.0);
-  float intensity = fresnel * (0.12 + 0.9 * pow(sun, 0.9)) * uStrength;
-  intensity += mie * fresnel * 0.35 * uStrength;
+  float intensity = fresnel * (0.12 + 0.9 * pow(sun, 0.55)) * uStrength;
   gl_FragColor = vec4(uColor * intensity, intensity);
 }
 `;
@@ -252,7 +249,7 @@ export default function SatelliteOrbit() {
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.35;
+    renderer.toneMappingExposure = 1.18;
     container.appendChild(renderer.domElement);
 
     // Bloom post-processing: only bright areas (sun-glint, cloud tops, lit limb)
@@ -263,16 +260,18 @@ export default function SatelliteOrbit() {
     composer.addPass(new RenderPass(scene, camera));
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(width, height),
-      0.55, // strength
-      0.6,  // radius
-      0.82, // threshold – keep dark space from blooming
+      0.3,  // strength
+      0.45, // radius
+      0.92, // threshold – keep dark space from blooming
     );
     composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
 
     // Light roughly from the camera direction so the facing hemisphere is lit,
     // with a little tilt for a soft terminator.
-    const sunDir = new THREE.Vector3(-0.55, 0.30, 1.0).normalize();
+    // Sun comes in low from the left, almost in-plane, so the right limb falls
+    // into night (with city lights) — matching the reference lighting.
+    const sunDir = new THREE.Vector3(-0.95, -0.08, 0.22).normalize();
 
     // ── Point-cloud stars ──
     const starCount = 11000;
