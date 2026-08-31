@@ -48,7 +48,14 @@ export default function Experience() {
               delay={i * 60}
             >
               <div className="company__bg" aria-hidden="true">
-                {company.backdrop && (
+                {company.backdrop && company.backdrop.image && (
+                  <img
+                    className="company__media"
+                    src={company.backdrop.image}
+                    alt=""
+                  />
+                )}
+                {company.backdrop && company.backdrop.video && (
                   <video
                     className="company__media"
                     poster={company.backdrop.poster}
