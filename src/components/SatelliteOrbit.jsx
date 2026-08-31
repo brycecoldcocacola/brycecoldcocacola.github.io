@@ -34,29 +34,76 @@ void main() {
 
   vec4 day = texture2D(uDay, vUv);
   vec4 night = texture2D(uNight, vUv);
+  // Specular map doubles as an ocean mask: ~1 over water, 0 over land.
   float ocean = texture2D(uSpec, vUv).r;
 
   float nDotL = dot(n, uSunDir);
-  float dayLight = smoothstep(-0.16, 0.28, nDotL);
+  // Soft, slightly wide day/night terminator.
+  float dayLight = smoothstep(-0.12, 0.32, nDotL);
 
-  // Lit hemisphere uses the (bright) day map; night side glows with city lights.
-  vec3 base = night.rgb * 1.8 + 0.05;
-  base = mix(base, day.rgb * 1.25, dayLight);
+  // --- Night side: deep blue-black with glowing city lights ---
+  vec3 nightCol = night.rgb * 2.0;
+  nightCol += vec3(0.010, 0.018, 0.045);   // faint ambient so water isn't pure black
 
-  // Subtle warm band across the terminator.
-  float term = smoothstep(-0.28, -0.04, nDotL) * (1.0 - smoothstep(0.06, 0.30, nDotL));
-  base += vec3(0.28, 0.11, 0.03) * term * 0.30;
+  // --- Day side ---
+  // Deepen the water so oceans read blue instead of pale land.
+  float water = clamp(ocean * day.r * 1.4, 0.0, 0.7);
+  vec3 dayCol = mix(day.rgb, day.rgb * vec3(0.42, 0.60, 0.92), water);
+  dayCol *= 1.06;
+  // Lambertian falloff so the limb isn't blown out.
+  dayCol *= mix(0.50, 1.0, clamp(nDotL, 0.0, 1.0));
 
-  // Soft ocean sheen (kept low so it never blows out to white).
+  vec3 base = mix(nightCol, dayCol, dayLight);
+
+  // Warm sunset band across the terminator.
+  float term = smoothstep(-0.22, 0.0, nDotL) * (1.0 - smoothstep(0.0, 0.22, nDotL));
+  base += vec3(0.32, 0.14, 0.05) * term * 0.55;
+
+  // --- Ocean sun-glint (master-maps style): tight Blinn-Phong on water only ---
   vec3 halfVec = normalize(uSunDir + viewDir);
-  float spec = pow(max(dot(n, halfVec), 0.0), 40.0) * 0.08 * ocean * dayLight;
-  base += vec3(0.85, 0.78, 0.6) * spec;
+  float ndh = max(dot(n, halfVec), 0.0);
+  float glint = pow(ndh, 220.0) + pow(ndh, 48.0) * 0.08;
+  base += vec3(1.0, 0.94, 0.82) * glint * ocean * dayLight * 0.85;
 
-  // Very faint limb tint, no hard outline.
-  float fres = pow(1.0 - max(dot(viewDir, n), 0.0), 4.0) * 0.05;
-  base += vec3(0.22, 0.42, 0.85) * fres * (0.30 + dayLight);
+  // --- Fresnel sky reflection on water in daylight (adds depth) ---
+  float fres = pow(1.0 - max(dot(viewDir, n), 0.0), 4.0);
+  base += vec3(0.16, 0.32, 0.6) * fres * ocean * dayLight * 0.5;
+  // Faint blue limb on land too.
+  base += vec3(0.12, 0.26, 0.55) * fres * 0.18;
 
   gl_FragColor = vec4(base, 1.0);
+}
+`;
+
+// ── Cloud shader: sun-lit opaque-where-thick layer, fading out at the limb ──
+const cloudVertex = `
+varying vec2 vUv;
+varying vec3 vNormal;
+varying vec3 vWorldPos;
+void main() {
+  vUv = uv;
+  vNormal = normalize(mat3(modelMatrix) * normal);
+  vec4 wp = modelMatrix * vec4(position, 1.0);
+  vWorldPos = wp.xyz;
+  gl_Position = projectionMatrix * viewMatrix * wp;
+}
+`;
+
+const cloudFragment = `
+uniform sampler2D uClouds;
+uniform vec3 uSunDir;
+varying vec2 vUv;
+varying vec3 vNormal;
+varying vec3 vWorldPos;
+void main() {
+  vec4 c = texture2D(uClouds, vUv);
+  vec3 n = normalize(vNormal);
+  vec3 viewDir = normalize(cameraPosition - vWorldPos);
+  float light = smoothstep(-0.18, 0.35, dot(n, uSunDir));
+  vec3 col = vec3(1.0) * (0.06 + 0.94 * light);
+  // Ease alpha toward the limb so the shell never hard-edges against space.
+  float rim = smoothstep(0.0, 0.30, max(dot(viewDir, n), 0.0));
+  gl_FragColor = vec4(col, c.a * rim);
 }
 `;
 
@@ -81,9 +128,13 @@ varying vec3 vWorldPos;
 void main() {
   vec3 viewDir = normalize(cameraPosition - vWorldPos);
   vec3 n = normalize(vNormal);
-  float fresnel = pow(1.0 - dot(n, viewDir), 5.0);
-  float sunFacing = max(dot(n, uSunDir), 0.0);
-  float intensity = fresnel * (0.05 + sunFacing) * uStrength;
+  // Limb glow via fresnel (BackSide shell -> brighter toward the silhouette).
+  float fresnel = pow(clamp(1.0 - dot(n, viewDir), 0.0, 1.0), 3.2);
+  float sun = clamp(dot(n, uSunDir), 0.0, 1.0);
+  // Mie-like forward scatter: the halo blooms toward the sun and at the limb.
+  float mie = pow(max(dot(viewDir, -normalize(uSunDir)), 0.0), 4.0);
+  float intensity = fresnel * (0.16 + 0.9 * pow(sun, 0.8)) * uStrength;
+  intensity += mie * fresnel * 0.4 * uStrength;
   gl_FragColor = vec4(uColor * intensity, intensity);
 }
 `;
@@ -116,7 +167,6 @@ class Meteor {
       new THREE.PointsMaterial({
         size: 0.12, sizeAttenuation: true, transparent: true, depthWrite: false,
         blending: THREE.AdditiveBlending, map: sprite, color: color, alphaTest: 0.02,
-        transparent: true,
       }),
     );
     this.head.frustumCulled = false;
@@ -202,7 +252,7 @@ export default function SatelliteOrbit() {
 
     // Light roughly from the camera direction so the facing hemisphere is lit,
     // with a little tilt for a soft terminator.
-    const sunDir = new THREE.Vector3(-1.1, 0.45, 1.5).normalize();
+    const sunDir = new THREE.Vector3(-0.55, 0.30, 1.0).normalize();
 
     // ── Point-cloud stars ──
     const starCount = 11000;
@@ -222,16 +272,29 @@ export default function SatelliteOrbit() {
     });
     scene.add(new THREE.Points(starGeo, starMat));
 
-    // ── Globe group, centred to the right so it bleeds off-edge behind text ──
+    // ── Globe group, pushed back and to the right. Pulling the planet deeper
+    //    into the scene keeps the 4K texture at a smaller on-screen footprint
+    //    (and grazing angle), so the texture's limits aren't apparent when it
+    //    fills the frame on a 27" monitor. ──
     const earthGroup = new THREE.Group();
-    earthGroup.position.set(1.55, 0, 0);
+    earthGroup.position.set(1.95, 0.05, -1.2);
     scene.add(earthGroup);
 
-    const loadTex = (url) => new Promise((res) => {
+    const loadTex = (url, opts = {}) => new Promise((res) => {
       const loader = new THREE.TextureLoader();
       loader.setCrossOrigin('anonymous');
-      loader.load(url, (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; res(t); }, undefined, () => res(null));
+      loader.load(url, (t) => {
+        if (opts.srgb !== false) t.colorSpace = THREE.SRGBColorSpace;
+        t.anisotropy = 8;
+        res(t);
+      }, undefined, () => res(null));
     });
+
+    // Inner spin group: the globe and clouds spin here while the atmosphere
+    // shells stay anchored to the un-rotating outer group, so the halo never
+    // smears as the planet turns.
+    const spinGroup = new THREE.Group();
+    earthGroup.add(spinGroup);
 
     const earthGeo = new THREE.SphereGeometry(1.78, 128, 64);
     const globeMat = new THREE.ShaderMaterial({
@@ -245,24 +308,39 @@ export default function SatelliteOrbit() {
       },
     });
     const globeMesh = new THREE.Mesh(earthGeo, globeMat);
-    earthGroup.add(globeMesh);
+    spinGroup.add(globeMesh);
 
-    // Atmosphere shells (tight rim glow + soft outer halo).
+    // Cloud layer rides just above the surface and drifts under its own rate.
+    const cloudMat = new THREE.ShaderMaterial({
+      vertexShader: cloudVertex,
+      fragmentShader: cloudFragment,
+      uniforms: {
+        uClouds: { value: null },
+        uSunDir: { value: sunDir },
+      },
+      transparent: true,
+      depthWrite: false,
+    });
+    const cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(1.805, 96, 48), cloudMat);
+    spinGroup.add(cloudMesh);
+
+    // Atmosphere shells (tight rim glow + soft outer halo) – anchored to the
+    // un-rotating earthGroup.
     const atmosMat = new THREE.ShaderMaterial({
       vertexShader: atmosVertex,
       fragmentShader: atmosFragment,
-      uniforms: { uSunDir: { value: sunDir }, uStrength: { value: 0.7 }, uColor: { value: new THREE.Color(0.28, 0.52, 1.0) } },
+      uniforms: { uSunDir: { value: sunDir }, uStrength: { value: 1.15 }, uColor: { value: new THREE.Color(0.28, 0.55, 1.0) } },
       transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
     });
-    earthGroup.add(new THREE.Mesh(new THREE.SphereGeometry(1.82, 64, 32), atmosMat));
+    earthGroup.add(new THREE.Mesh(new THREE.SphereGeometry(1.84, 64, 32), atmosMat));
 
     const outerAtmosMat = new THREE.ShaderMaterial({
       vertexShader: atmosVertex,
       fragmentShader: atmosFragment,
-      uniforms: { uSunDir: { value: sunDir }, uStrength: { value: 0.25 }, uColor: { value: new THREE.Color(0.18, 0.45, 0.95) } },
+      uniforms: { uSunDir: { value: sunDir }, uStrength: { value: 0.5 }, uColor: { value: new THREE.Color(0.18, 0.45, 0.95) } },
       transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
     });
-    earthGroup.add(new THREE.Mesh(new THREE.SphereGeometry(2.1, 64, 32), outerAtmosMat));
+    earthGroup.add(new THREE.Mesh(new THREE.SphereGeometry(2.15, 64, 32), outerAtmosMat));
 
     // ── Meteor trails — orbiting the globe's actual centre ──
     const sprite = makeHeadSprite();
@@ -295,11 +373,13 @@ export default function SatelliteOrbit() {
       loadTex(BASE + 'earth_day_4096.jpg'),
       loadTex(BASE + 'earth_night_4096.jpg'),
       loadTex(BASE + 'earth_specular_2048.jpg'),
-    ]).then(([day, night, spec]) => {
+      loadTex(BASE + 'earth_clouds_1024.png'),
+    ]).then(([day, night, spec, clouds]) => {
       if (disposed) return;
       if (day) globeMat.uniforms.uDay.value = day;
       if (night) globeMat.uniforms.uNight.value = night;
       if (spec) globeMat.uniforms.uSpec.value = spec;
+      if (clouds) cloudMat.uniforms.uClouds.value = clouds;
     });
 
     // ── Drag-to-spin state ──
@@ -366,7 +446,9 @@ export default function SatelliteOrbit() {
         spin.rotX += spin.velX;
         spin.rotX = Math.max(-0.6, Math.min(0.6, spin.rotX));
       }
-      earthGroup.rotation.set(spin.rotX, spin.rotY, 0);
+      spinGroup.rotation.set(spin.rotX, spin.rotY, 0);
+      // Clouds drift a touch faster than the surface for parallax.
+      cloudMesh.rotation.y += dt * 0.006;
 
       // Meteor trails.
       meteors.forEach((m) => m.update(elapsed));
