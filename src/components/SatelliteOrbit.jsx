@@ -1,5 +1,9 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 
 // Master-Maps style Blue Marble textures (served via jsDelivr with CORS so
 // WebGL can sample them): 4096 day / night + ocean specular.
@@ -128,13 +132,14 @@ varying vec3 vWorldPos;
 void main() {
   vec3 viewDir = normalize(cameraPosition - vWorldPos);
   vec3 n = normalize(vNormal);
-  // Limb glow via fresnel (BackSide shell -> brighter toward the silhouette).
-  float fresnel = pow(clamp(1.0 - dot(n, viewDir), 0.0, 1.0), 3.2);
+  // Limb glow via fresnel (BackSide shell -> brightest toward the silhouette),
+  // kept broad and soft so it reads as atmosphere rather than a hard ring.
+  float fresnel = pow(clamp(1.0 - dot(n, viewDir), 0.0, 1.0), 2.3);
   float sun = clamp(dot(n, uSunDir), 0.0, 1.0);
-  // Mie-like forward scatter: the halo blooms toward the sun and at the limb.
+  // Mie-like forward scatter: the halo blooms toward the sun.
   float mie = pow(max(dot(viewDir, -normalize(uSunDir)), 0.0), 4.0);
-  float intensity = fresnel * (0.16 + 0.9 * pow(sun, 0.8)) * uStrength;
-  intensity += mie * fresnel * 0.4 * uStrength;
+  float intensity = fresnel * (0.12 + 0.9 * pow(sun, 0.9)) * uStrength;
+  intensity += mie * fresnel * 0.35 * uStrength;
   gl_FragColor = vec4(uColor * intensity, intensity);
 }
 `;
@@ -250,6 +255,21 @@ export default function SatelliteOrbit() {
     renderer.toneMappingExposure = 1.35;
     container.appendChild(renderer.domElement);
 
+    // Bloom post-processing: only bright areas (sun-glint, cloud tops, lit limb)
+    // bloom, giving the dreamy atmospheric glow of the three.js Earth demos.
+    const composer = new EffectComposer(renderer);
+    composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    composer.setSize(width, height);
+    composer.addPass(new RenderPass(scene, camera));
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(width, height),
+      0.55, // strength
+      0.6,  // radius
+      0.82, // threshold – keep dark space from blooming
+    );
+    composer.addPass(bloomPass);
+    composer.addPass(new OutputPass());
+
     // Light roughly from the camera direction so the facing hemisphere is lit,
     // with a little tilt for a soft terminator.
     const sunDir = new THREE.Vector3(-0.55, 0.30, 1.0).normalize();
@@ -324,23 +344,16 @@ export default function SatelliteOrbit() {
     const cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(1.805, 96, 48), cloudMat);
     spinGroup.add(cloudMesh);
 
-    // Atmosphere shells (tight rim glow + soft outer halo) – anchored to the
-    // un-rotating earthGroup.
+    // Single atmosphere shell anchored to the un-rotating earthGroup. The glow
+    // itself comes from bloom post-processing, so this shell only tints the
+    // limb a soft blue (no stacked rings).
     const atmosMat = new THREE.ShaderMaterial({
       vertexShader: atmosVertex,
       fragmentShader: atmosFragment,
-      uniforms: { uSunDir: { value: sunDir }, uStrength: { value: 1.15 }, uColor: { value: new THREE.Color(0.28, 0.55, 1.0) } },
+      uniforms: { uSunDir: { value: sunDir }, uStrength: { value: 0.85 }, uColor: { value: new THREE.Color(0.22, 0.46, 1.0) } },
       transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
     });
-    earthGroup.add(new THREE.Mesh(new THREE.SphereGeometry(1.84, 64, 32), atmosMat));
-
-    const outerAtmosMat = new THREE.ShaderMaterial({
-      vertexShader: atmosVertex,
-      fragmentShader: atmosFragment,
-      uniforms: { uSunDir: { value: sunDir }, uStrength: { value: 0.5 }, uColor: { value: new THREE.Color(0.18, 0.45, 0.95) } },
-      transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
-    });
-    earthGroup.add(new THREE.Mesh(new THREE.SphereGeometry(2.15, 64, 32), outerAtmosMat));
+    earthGroup.add(new THREE.Mesh(new THREE.SphereGeometry(1.96, 64, 32), atmosMat));
 
     // ── Meteor trails — orbiting the globe's actual centre ──
     const sprite = makeHeadSprite();
@@ -453,7 +466,7 @@ export default function SatelliteOrbit() {
       // Meteor trails.
       meteors.forEach((m) => m.update(elapsed));
 
-      renderer.render(scene, camera);
+      composer.render();
     }
 
     animate();
@@ -465,6 +478,7 @@ export default function SatelliteOrbit() {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      composer.setSize(w, h);
     };
     window.addEventListener('resize', handleResize);
 
@@ -506,6 +520,8 @@ export default function SatelliteOrbit() {
         });
       });
       sprite.dispose();
+      bloomPass.dispose?.();
+      composer.dispose?.();
       if (container && renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
       }
