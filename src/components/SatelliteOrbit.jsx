@@ -132,11 +132,15 @@ varying vec3 vWorldPos;
 void main() {
   vec3 viewDir = normalize(cameraPosition - vWorldPos);
   vec3 n = normalize(vNormal);
-  // Broad, very soft fresnel so the shell reads as an atmosphere halo, not a ring.
-  float fresnel = pow(clamp(1.0 - dot(n, viewDir), 0.0, 1.0), 2.4);
+  // BackSide shell: -dot(n,viewDir) is 0 at the outer silhouette and grows
+  // toward the planet limb (which the opaque planet then occludes). So intensity
+  // ramps up inward and fades to exactly 0 at the outer edge -> a soft halo
+  // hugging the planet with no hard ring.
+  float t = clamp(-dot(n, viewDir), 0.0, 1.0);
+  float fresnel = pow(t, 1.7);
   // Sun-exposed limbs glow warmer/brighter; night-side halo is dim but present.
   float sun = clamp(dot(n, uSunDir), 0.0, 1.0);
-  float intensity = fresnel * (0.12 + 0.9 * pow(sun, 0.55)) * uStrength;
+  float intensity = fresnel * (0.18 + 0.82 * pow(sun, 0.6)) * uStrength;
   gl_FragColor = vec4(uColor * intensity, intensity);
 }
 `;
@@ -459,6 +463,9 @@ export default function SatelliteOrbit() {
         spin.rotX = Math.max(-0.6, Math.min(0.6, spin.rotX));
       }
       spinGroup.rotation.set(spin.rotX, spin.rotY, 0);
+      // Spin the satellite / meteor trails with the planet so the whole system
+      // turns as one. The atmosphere halo stays anchored to the sun direction.
+      meteorGroup.rotation.set(spin.rotX, spin.rotY, 0);
       // Clouds drift a touch faster than the surface for parallax.
       cloudMesh.rotation.y += dt * 0.006;
 
