@@ -135,15 +135,14 @@ varying vec3 vWorldPos;
 void main() {
   vec3 viewDir = normalize(cameraPosition - vWorldPos);
   vec3 n = normalize(vNormal);
-  // BackSide shell: -dot(n,viewDir) is 0 at the outer silhouette and grows
-  // toward the planet limb (which the opaque planet then occludes). So intensity
-  // ramps up inward and fades to exactly 0 at the outer edge -> a soft halo
-  // hugging the planet with no hard ring.
-  float t = clamp(-dot(n, viewDir), 0.0, 1.0);
-  float fresnel = pow(t, 1.7);
-  // Sun-exposed limbs glow warmer/brighter; night-side halo is dim but present.
-  float sun = clamp(dot(n, uSunDir), 0.0, 1.0);
-  float intensity = fresnel * (0.18 + 0.82 * pow(sun, 0.6)) * uStrength;
+  // Tangent-ness of the view ray: 0 looking straight at the surface, 1 at the
+  // silhouette. abs() keeps the rim glow even around the WHOLE planet (lit and
+  // night limb alike) instead of a highlight stuck to one side.
+  float rim = pow(clamp(1.0 - abs(dot(n, viewDir)), 0.0, 1.0), 3.0);
+  // Gentle day-side boost so the sun limb is a touch brighter, but still cool
+  // blue (no warm/pink term, which read as a stray band on one limb).
+  float sun = clamp(dot(n, uSunDir) * 0.5 + 0.5, 0.0, 1.0);
+  float intensity = rim * mix(0.6, 1.0, sun) * uStrength;
   gl_FragColor = vec4(uColor * intensity, intensity);
 }
 `;
@@ -416,6 +415,7 @@ export default function SatelliteOrbit() {
 
     // ── Drag-to-spin state ──
     const spin = { rotX: 0.08, rotY: -0.5, velX: 0, velY: 0 };
+    let ambient = 0;   // continuous drift applied to globe + satellites only
     let dragging = false;
     let lastX = 0;
     let lastY = 0;
@@ -469,8 +469,9 @@ export default function SatelliteOrbit() {
       prevTime = now;
       const elapsed = (now - start) / 1000;
 
-      // Slow base spin blended into user drag inertia.
-      spin.rotY += dt * 0.015;
+      // Continuous drift applies only to the globe and satellites; the starfield
+      // never spins on its own, so the sky stays put until you grab it.
+      ambient += dt * 0.015;
       if (!dragging) {
         spin.velX *= 0.97;
         spin.velY *= 0.97;
@@ -478,11 +479,12 @@ export default function SatelliteOrbit() {
         spin.rotX += spin.velX;
         spin.rotX = Math.max(-0.6, Math.min(0.6, spin.rotX));
       }
-      spinGroup.rotation.set(spin.rotX, spin.rotY, 0);
+      const rotY = ambient + spin.rotY;
+      spinGroup.rotation.set(spin.rotX, rotY, 0);
       // Spin the satellite / meteor trails with the planet so the whole system
       // turns as one. The atmosphere halo stays anchored to the sun direction.
-      meteorGroup.rotation.set(spin.rotX, spin.rotY, 0);
-      // The starfield turns with everything else so the whole scene reacts to drag.
+      meteorGroup.rotation.set(spin.rotX, rotY, 0);
+      // Starfield follows user drag only - no idle spin, no ambient drift.
       starField.rotation.set(spin.rotX, spin.rotY, 0);
       // Clouds drift a touch faster than the surface for parallax.
       cloudMesh.rotation.y += dt * 0.006;
