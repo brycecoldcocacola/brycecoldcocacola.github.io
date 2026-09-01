@@ -67,16 +67,20 @@ void main() {
   float term = smoothstep(-0.12, 0.06, nDotL) * (1.0 - smoothstep(0.06, 0.26, nDotL));
   base += vec3(0.35, 0.15, 0.04) * term * 0.55;
 
-  // --- Soft sun glint on ocean: moderately broad, kept dim so bloom stays small ---
+  // --- Soft, tight sun glint on ocean only (kept dim so it never blows out) ---
   vec3 halfVec = normalize(uSunDir + viewDir);
   float ndh = max(dot(n, halfVec), 0.0);
-  float glint = pow(ndh, 90.0) * 0.45;
-  base += vec3(1.0, 0.98, 0.92) * glint * ocean * dayLight;
+  float glint = pow(ndh, 220.0) * 0.22;
+  base += vec3(1.0, 0.97, 0.88) * glint * ocean * dayLight;
 
-  // Fresnel blue limb tint, brighter on the sunlit limb.
-  float fres = pow(1.0 - max(dot(viewDir, n), 0.0), 4.0);
-  float sunLimb = clamp(dot(n, uSunDir), 0.0, 1.0);
-  base += vec3(0.16, 0.42, 1.0) * fres * (0.15 + 0.85 * sunLimb) * 0.9;
+  // --- Atmospheric limb: a clean sun-anchored fresnel glow that hugs the
+  //     planet silhouette. Baked into the globe (no separate shell) so it can
+  //     never leak outward beyond the edge, then amplified by the bloom pass. ---
+  float fres = pow(1.0 - max(dot(viewDir, n), 0.0), 3.2);
+  // Light wraps over the lit limb and fades toward the night side.
+  float dayLimb = smoothstep(-0.35, 0.45, dot(n, uSunDir));
+  vec3 atmoCol = mix(vec3(0.10, 0.34, 0.85), vec3(0.55, 0.78, 1.0), dayLimb);
+  base += atmoCol * fres * (0.25 + 0.75 * dayLimb) * 0.95;
 
   gl_FragColor = vec4(base, 1.0);
 }
@@ -111,39 +115,6 @@ void main() {
   // Ease alpha toward the limb so the shell never hard-edges against space.
   float rim = smoothstep(0.0, 0.30, max(dot(viewDir, n), 0.0));
   gl_FragColor = vec4(col, c.a * rim);
-}
-`;
-
-// ── Atmosphere shader (tight soft limb glow) ──
-const atmosVertex = `
-varying vec3 vNormal;
-varying vec3 vWorldPos;
-void main() {
-  vec4 wp = modelMatrix * vec4(position, 1.0);
-  vWorldPos = wp.xyz;
-  vNormal = normalize(mat3(modelMatrix) * normal);
-  gl_Position = projectionMatrix * viewMatrix * wp;
-}
-`;
-
-const atmosFragment = `
-uniform vec3 uSunDir;
-uniform float uStrength;
-uniform vec3 uColor;
-varying vec3 vNormal;
-varying vec3 vWorldPos;
-void main() {
-  vec3 viewDir = normalize(cameraPosition - vWorldPos);
-  vec3 n = normalize(vNormal);
-  // Tangent-ness of the view ray: 0 looking straight at the surface, 1 at the
-  // silhouette. abs() keeps the rim glow even around the WHOLE planet (lit and
-  // night limb alike) instead of a highlight stuck to one side.
-  float rim = pow(clamp(1.0 - abs(dot(n, viewDir)), 0.0, 1.0), 3.0);
-  // Gentle day-side boost so the sun limb is a touch brighter, but still cool
-  // blue (no warm/pink term, which read as a stray band on one limb).
-  float sun = clamp(dot(n, uSunDir) * 0.5 + 0.5, 0.0, 1.0);
-  float intensity = rim * mix(0.6, 1.0, sun) * uStrength;
-  gl_FragColor = vec4(uColor * intensity, intensity);
 }
 `;
 
@@ -350,16 +321,9 @@ export default function SatelliteOrbit() {
     const cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(1.805, 96, 48), cloudMat);
     spinGroup.add(cloudMesh);
 
-    // Single atmosphere shell anchored to the un-rotating earthGroup. The glow
-    // itself comes from bloom post-processing, so this shell only tints the
-    // limb a soft blue (no stacked rings).
-    const atmosMat = new THREE.ShaderMaterial({
-      vertexShader: atmosVertex,
-      fragmentShader: atmosFragment,
-      uniforms: { uSunDir: { value: sunDir }, uStrength: { value: 0.85 }, uColor: { value: new THREE.Color(0.22, 0.46, 1.0) } },
-      transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
-    });
-    earthGroup.add(new THREE.Mesh(new THREE.SphereGeometry(1.96, 64, 32), atmosMat));
+    // The atmospheric halo is produced by the globe's own sun-anchored fresnel
+    // limb (see globeFragment) amplified by the bloom pass - there is no
+    // separate shell, which avoids the off-axis back-face leak entirely.
 
     // ── Meteor trails — orbiting the globe's actual centre ──
     const sprite = makeHeadSprite();
