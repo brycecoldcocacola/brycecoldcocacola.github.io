@@ -1,9 +1,5 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 
 // Master-Maps style Blue Marble textures (served via jsDelivr with CORS so
 // WebGL can sample them): 4096 day / night + ocean specular.
@@ -264,30 +260,10 @@ export default function SatelliteOrbit() {
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
-    // Cap pixel ratio at 1.5 - the bloom pass is resolution-bound and the
-    // extra pixels past ~1.5 cost a lot of fill-rate for little visual gain.
-    const PR = Math.min(window.devicePixelRatio, 1.5);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.18;
     container.appendChild(renderer.domElement);
-
-    // Bloom post-processing: only bright areas (sun-glint, cloud tops, lit limb)
-    // bloom, giving the dreamy atmospheric glow of the three.js Earth demos.
-    const composer = new EffectComposer(renderer);
-    composer.setPixelRatio(PR);
-    composer.setSize(width, height);
-    composer.addPass(new RenderPass(scene, camera));
-    // Bloom is the most expensive pass (multiple downsample + separable blurs).
-    // Running it at half resolution roughly quarters its cost and the glow is a
-    // low-frequency effect, so the lost detail is not noticeable.
-    const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(width / 2, height / 2),
-      0.3,  // strength
-      0.45, // radius
-      0.92, // threshold – keep dark space from blooming
-    );
-    composer.addPass(bloomPass);
-    composer.addPass(new OutputPass());
 
     // Light roughly from the camera direction so the facing hemisphere is lit,
     // with a little tilt for a soft terminator.
@@ -527,7 +503,7 @@ export default function SatelliteOrbit() {
       // Meteor trails.
       meteors.forEach((m) => m.update(elapsed));
 
-      composer.render();
+      renderer.render(scene, camera);
     }
 
     animate();
@@ -539,8 +515,6 @@ export default function SatelliteOrbit() {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
-      composer.setSize(w, h);
-      bloomPass.setSize(w / 2, h / 2);
     };
     window.addEventListener('resize', handleResize);
 
@@ -582,8 +556,6 @@ export default function SatelliteOrbit() {
         });
       });
       sprite.dispose();
-      bloomPass.dispose?.();
-      composer.dispose?.();
       if (container && renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
       }
