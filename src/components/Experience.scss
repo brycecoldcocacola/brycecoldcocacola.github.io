@@ -240,6 +240,17 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6), 0 2px 16px rgba(0, 0, 0, 0.45);
 }
 
+// Aerospace — the globe bleeds off the right edge, so pin the text to the left
+// third instead of centring it (the default centres the whole shell, which reads
+// as centred on a wide/27" monitor).
+.company--aerospace .company__content {
+  width: min(42%, 560px);
+  margin-inline-start: clamp(1.25rem, 5vw, 7rem);
+  margin-inline-end: 0;
+  padding-right: 0;
+  text-align: left;
+}
+
 .company__orbit {
   position: absolute;
   inset: 0;

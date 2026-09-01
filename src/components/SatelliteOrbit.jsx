@@ -8,6 +8,9 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 // Master-Maps style Blue Marble textures (served via jsDelivr with CORS so
 // WebGL can sample them): 4096 day / night + ocean specular.
 const BASE = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r185/examples/textures/planets/';
+// Higher-resolution cloud layer (4K, CORS-enabled) — crisper than the 1K
+// clouds that ship with the three.js examples.
+const CLOUD_URL = 'https://cdn.jsdelivr.net/gh/turban/webgl-earth@master/images/fair_clouds_4k.png';
 
 // ── Globe shader: soft wrap-lighting day / night-lights blend, gentle sheen ──
 const globeVertex = `
@@ -293,7 +296,8 @@ export default function SatelliteOrbit() {
     const starMat = new THREE.PointsMaterial({
       color: 0xffffff, size: 1.0, sizeAttenuation: true, transparent: true, opacity: 0.9, depthWrite: false,
     });
-    scene.add(new THREE.Points(starGeo, starMat));
+    const starField = new THREE.Points(starGeo, starMat);
+    scene.add(starField);
 
     // ── Globe group, pushed back and to the right. Pulling the planet deeper
     //    into the scene keeps the 4K texture at a smaller on-screen footprint
@@ -364,16 +368,28 @@ export default function SatelliteOrbit() {
     meteorGroup.position.copy(earthGroup.position);
     scene.add(meteorGroup);
 
+    // Orbital field: a mix of low passes hugging the globe and high, wide orbits
+    // whose far sides reach into the empty space on the left of the page.
     const meteorDefs = [
-      { r: 1.95, inc: 0.55, node: 0.20, speed: 0.10, phase: 0.0, color: new THREE.Color('#ffd9a0'), tail: 9 },
-      { r: 2.08, inc: -0.90, node: 1.10, speed: -0.085, phase: 2.1, color: new THREE.Color('#a0d4ff'), tail: 11 },
-      { r: 2.22, inc: 1.30, node: -0.60, speed: 0.07, phase: 4.2, color: new THREE.Color('#ffe0c0'), tail: 13 },
-      { r: 2.02, inc: 0.25, node: -1.60, speed: 0.095, phase: 1.1, color: new THREE.Color('#ff9e80'), tail: 8 },
-      { r: 2.15, inc: -1.60, node: 2.40, speed: -0.065, phase: 5.4, color: new THREE.Color('#9ee8ff'), tail: 12 },
-      { r: 2.30, inc: 0.85, node: 0.05, speed: 0.055, phase: 3.0, color: new THREE.Color('#ffe6b0'), tail: 14 },
-      { r: 1.9, inc: 2.10, node: 1.70, speed: 0.115, phase: 0.6, color: new THREE.Color('#ffc0d0'), tail: 7 },
-      { r: 2.40, inc: -0.35, node: 3.10, speed: 0.05, phase: 1.7, color: new THREE.Color('#c7b0ff'), tail: 15 },
-      { r: 2.12, inc: 0.15, node: 2.05, speed: -0.09, phase: 4.8, color: new THREE.Color('#ff8a8a'), tail: 10 },
+      // Low, tight passes that clearly hug the planet.
+      { r: 1.9, inc: 0.55, node: 0.20, speed: 0.10, phase: 0.0, color: new THREE.Color('#ffd9a0'), tail: 9 },
+      { r: 1.97, inc: -0.90, node: 1.10, speed: -0.085, phase: 2.1, color: new THREE.Color('#a0d4ff'), tail: 11 },
+      { r: 2.03, inc: 1.30, node: -0.60, speed: 0.07, phase: 4.2, color: new THREE.Color('#ffe0c0'), tail: 13 },
+      { r: 2.08, inc: 0.25, node: -1.60, speed: 0.095, phase: 1.1, color: new THREE.Color('#ff9e80'), tail: 8 },
+      { r: 2.13, inc: -1.60, node: 2.40, speed: -0.065, phase: 5.4, color: new THREE.Color('#9ee8ff'), tail: 12 },
+      { r: 2.18, inc: 0.85, node: 0.05, speed: 0.055, phase: 3.0, color: new THREE.Color('#ffe6b0'), tail: 14 },
+      { r: 1.86, inc: 2.10, node: 1.70, speed: 0.115, phase: 0.6, color: new THREE.Color('#ffc0d0'), tail: 7 },
+      { r: 2.24, inc: 0.15, node: 2.05, speed: -0.09, phase: 4.8, color: new THREE.Color('#ff8a8a'), tail: 10 },
+      // Mid-range orbits.
+      { r: 2.45, inc: -0.35, node: 3.10, speed: 0.05, phase: 1.7, color: new THREE.Color('#c7b0ff'), tail: 15 },
+      { r: 2.62, inc: 1.05, node: -1.20, speed: 0.045, phase: 2.8, color: new THREE.Color('#bfe6ff'), tail: 16 },
+      { r: 2.80, inc: -0.65, node: 0.75, speed: -0.04, phase: 5.0, color: new THREE.Color('#ffe0a8'), tail: 17 },
+      // High, wide orbits reaching far out to fill the left of the viewport.
+      { r: 3.05, inc: 0.45, node: -0.35, speed: 0.034, phase: 0.9, color: new THREE.Color('#ffd0b0'), tail: 18 },
+      { r: 3.25, inc: -1.25, node: 1.85, speed: -0.03, phase: 3.6, color: new THREE.Color('#a8c8ff'), tail: 19 },
+      { r: 3.45, inc: 1.55, node: -2.05, speed: 0.026, phase: 4.9, color: new THREE.Color('#d8c0ff'), tail: 20 },
+      { r: 3.65, inc: -0.20, node: 2.75, speed: 0.022, phase: 1.4, color: new THREE.Color('#ffe8c8'), tail: 22 },
+      { r: 3.90, inc: 0.95, node: -1.75, speed: -0.02, phase: 5.8, color: new THREE.Color('#aee0ff'), tail: 24 },
     ];
     const meteors = meteorDefs.map((d) => new Meteor(d, sprite));
     meteors.forEach((m) => {
@@ -389,7 +405,7 @@ export default function SatelliteOrbit() {
       loadTex(BASE + 'earth_day_4096.jpg'),
       loadTex(BASE + 'earth_night_4096.jpg'),
       loadTex(BASE + 'earth_specular_2048.jpg'),
-      loadTex(BASE + 'earth_clouds_1024.png'),
+      loadTex(CLOUD_URL),
     ]).then(([day, night, spec, clouds]) => {
       if (disposed) return;
       if (day) globeMat.uniforms.uDay.value = day;
@@ -466,6 +482,8 @@ export default function SatelliteOrbit() {
       // Spin the satellite / meteor trails with the planet so the whole system
       // turns as one. The atmosphere halo stays anchored to the sun direction.
       meteorGroup.rotation.set(spin.rotX, spin.rotY, 0);
+      // The starfield turns with everything else so the whole scene reacts to drag.
+      starField.rotation.set(spin.rotX, spin.rotY, 0);
       // Clouds drift a touch faster than the surface for parallax.
       cloudMesh.rotation.y += dt * 0.006;
 
