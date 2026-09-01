@@ -73,14 +73,15 @@ void main() {
   float glint = pow(ndh, 220.0) * 0.22;
   base += vec3(1.0, 0.97, 0.88) * glint * ocean * dayLight;
 
-  // --- Atmospheric limb: a clean sun-anchored fresnel glow that hugs the
+  // --- Atmospheric limb: a thin, saturated-BLUE fresnel rim that hugs the
   //     planet silhouette. Baked into the globe (no separate shell) so it can
-  //     never leak outward beyond the edge, then amplified by the bloom pass. ---
-  float fres = pow(1.0 - max(dot(viewDir, n), 0.0), 3.2);
+  //     never leak outward. Kept dim and saturated so it stays below the bloom
+  //     threshold and never blooms into a white halo. ---
+  float fres = pow(1.0 - max(dot(viewDir, n), 0.0), 4.5);
   // Light wraps over the lit limb and fades toward the night side.
-  float dayLimb = smoothstep(-0.35, 0.45, dot(n, uSunDir));
-  vec3 atmoCol = mix(vec3(0.10, 0.34, 0.85), vec3(0.55, 0.78, 1.0), dayLimb);
-  base += atmoCol * fres * (0.25 + 0.75 * dayLimb) * 0.95;
+  float dayLimb = smoothstep(-0.30, 0.5, dot(n, uSunDir));
+  vec3 atmoCol = mix(vec3(0.04, 0.16, 0.45), vec3(0.18, 0.46, 1.0), dayLimb);
+  base += atmoCol * fres * (0.18 + 0.82 * dayLimb) * 0.55;
 
   gl_FragColor = vec4(base, 1.0);
 }
