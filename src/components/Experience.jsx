@@ -33,80 +33,80 @@ function Role({ title, period, meta, description }) {
 
 export default function Experience() {
   return (
-    <section id="experience" className="section experience">
+    <section id="experience" className="experience">
       <div className="shell">
         <Reveal className="section-label">
           <span className="eyebrow">01</span>
           <span className="section-label-text">Experience</span>
         </Reveal>
+      </div>
 
-        <div className="experience__list">
-          {experience.map((company, i) => (
-            <Reveal
-              key={company.company}
-              className={`company ${company.theme ? `company--${company.theme}` : ""}`}
-              delay={i * 60}
-            >
-              <div className="company__bg" aria-hidden="true">
-                {company.backdrop && company.backdrop.image && (
-                  <img
-                    className="company__media"
-                    src={company.backdrop.image}
-                    alt=""
-                  />
-                )}
-                {company.backdrop && company.backdrop.video && (
-                  <video
-                    className="company__media"
-                    poster={company.backdrop.poster}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    preload="metadata"
-                  >
-                    <source src={company.backdrop.video} type="video/mp4" />
-                  </video>
-                )}
-              </div>
-              <div className="company__content">
-                <div className="company__head">
-                  <div className="company__id">
-                    <h3 className="company__name">
-                      {company.url ? (
-                        <a href={company.url} target="_blank" rel="noreferrer noopener">
-                          {company.company}
-                        </a>
-                      ) : (
-                        company.company
-                      )}
-                    </h3>
-                    {company.blurb && (
-                      <p className="company__blurb">{company.blurb}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="company__body">
-                  <div className="company__roles">
-                    {company.roles.map((role) => (
-                      <Role key={role.title} {...role} />
-                    ))}
-                    {company.skills && <TagRow tags={company.skills} />}
-                  </div>
-                </div>
-              </div>
-
-              {company.orbit && (
-                <div className="company__orbit">
-                  <Suspense fallback={null}>
-                    <SatelliteOrbit />
-                  </Suspense>
-                </div>
+      <div className="experience__list">
+        {experience.map((company, i) => (
+          <Reveal
+            key={company.company}
+            className={`company ${company.theme ? `company--${company.theme}` : ""}`}
+            delay={i * 60}
+          >
+            <div className="company__bg" aria-hidden="true">
+              {company.backdrop && company.backdrop.image && (
+                <img
+                  className="company__media"
+                  src={company.backdrop.image}
+                  alt=""
+                />
               )}
-            </Reveal>
-          ))}
-        </div>
+              {company.backdrop && company.backdrop.video && (
+                <video
+                  className="company__media"
+                  poster={company.backdrop.poster}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                >
+                  <source src={company.backdrop.video} type="video/mp4" />
+                </video>
+              )}
+            </div>
+            <div className="company__content">
+              <div className="company__head">
+                <div className="company__id">
+                  <h3 className="company__name">
+                    {company.url ? (
+                      <a href={company.url} target="_blank" rel="noreferrer noopener">
+                        {company.company}
+                      </a>
+                    ) : (
+                      company.company
+                    )}
+                  </h3>
+                  {company.blurb && (
+                    <p className="company__blurb">{company.blurb}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="company__body">
+                <div className="company__roles">
+                  {company.roles.map((role) => (
+                    <Role key={role.title} {...role} />
+                  ))}
+                  {company.skills && <TagRow tags={company.skills} />}
+                </div>
+              </div>
+            </div>
+
+            {company.orbit && (
+              <div className="company__orbit">
+                <Suspense fallback={null}>
+                  <SatelliteOrbit />
+                </Suspense>
+              </div>
+            )}
+          </Reveal>
+        ))}
       </div>
     </section>
   );
