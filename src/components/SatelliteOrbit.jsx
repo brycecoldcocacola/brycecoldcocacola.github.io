@@ -63,10 +63,6 @@ void main() {
 
   vec3 base = mix(nightCol, dayCol, dayLight);
 
-  // Subtle warm sunset band across the terminator.
-  float term = smoothstep(-0.12, 0.06, nDotL) * (1.0 - smoothstep(0.06, 0.26, nDotL));
-  base += vec3(0.35, 0.15, 0.04) * term * 0.55;
-
   // --- Soft, tight sun glint on ocean only (kept dim so it never blows out) ---
   vec3 halfVec = normalize(uSunDir + viewDir);
   float ndh = max(dot(n, halfVec), 0.0);
@@ -172,7 +168,7 @@ class Meteor {
     this.phase = phase;
     this.color = color;
     this.tail = tail;
-    this.samples = 96;
+    this.samples = 64;
 
     const geo = new THREE.BufferGeometry();
     const positions = new Float32Array(this.samples * 3);
@@ -268,7 +264,9 @@ export default function SatelliteOrbit() {
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Cap pixel ratio at 1.5 - the bloom pass is resolution-bound and the
+    // extra pixels past ~1.5 cost a lot of fill-rate for little visual gain.
+    const PR = Math.min(window.devicePixelRatio, 1.5);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.18;
     container.appendChild(renderer.domElement);
@@ -276,11 +274,14 @@ export default function SatelliteOrbit() {
     // Bloom post-processing: only bright areas (sun-glint, cloud tops, lit limb)
     // bloom, giving the dreamy atmospheric glow of the three.js Earth demos.
     const composer = new EffectComposer(renderer);
-    composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    composer.setPixelRatio(PR);
     composer.setSize(width, height);
     composer.addPass(new RenderPass(scene, camera));
+    // Bloom is the most expensive pass (multiple downsample + separable blurs).
+    // Running it at half resolution roughly quarters its cost and the glow is a
+    // low-frequency effect, so the lost detail is not noticeable.
     const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(width, height),
+      new THREE.Vector2(width / 2, height / 2),
       0.3,  // strength
       0.45, // radius
       0.92, // threshold – keep dark space from blooming
@@ -295,7 +296,7 @@ export default function SatelliteOrbit() {
     const sunDir = new THREE.Vector3(-0.95, -0.08, 0.22).normalize();
 
     // ── Point-cloud stars ──
-    const starCount = 11000;
+    const starCount = 8000;
     const starGeo = new THREE.BufferGeometry();
     const starPositions = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount; i++) {
@@ -318,7 +319,11 @@ export default function SatelliteOrbit() {
     //    (and grazing angle), so the texture's limits aren't apparent when it
     //    fills the frame on a 27" monitor. ──
     const earthGroup = new THREE.Group();
-    earthGroup.position.set(1.95, 0.05, -1.2);
+    // Push the planet back and centre it vertically so the whole sphere is
+    // framed at roughly 2/3 of the viewport height (satellites included) rather
+    // than bleeding off the edges. The extra distance also hides texture pixel
+    // limits on a 27" monitor.
+    earthGroup.position.set(1.6, 0.0, -3.2);
     scene.add(earthGroup);
 
     const loadTex = (url, opts = {}) => new Promise((res) => {
@@ -370,7 +375,7 @@ export default function SatelliteOrbit() {
     // every frame in animate(). Rendered after the (opaque) globe so depth
     // hides its inner disk, leaving only the halo beyond the silhouette.
     const PLANET_R = 1.78;
-    const HALO_R = PLANET_R * 1.18;
+    const HALO_R = PLANET_R * 1.06;
     const haloMat = new THREE.ShaderMaterial({
       vertexShader: haloVertex,
       fragmentShader: haloFragment,
@@ -379,7 +384,7 @@ export default function SatelliteOrbit() {
         uPlanetCenter: { value: earthGroup.position.clone() },
         uPlanetR: { value: PLANET_R },
         uHaloR: { value: HALO_R },
-        uStrength: { value: 0.5 },
+        uStrength: { value: 0.42 },
       },
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
@@ -535,6 +540,7 @@ export default function SatelliteOrbit() {
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
       composer.setSize(w, h);
+      bloomPass.setSize(w / 2, h / 2);
     };
     window.addEventListener('resize', handleResize);
 
