@@ -119,6 +119,49 @@ void main() {
 }
 `;
 
+// ── Atmospheric halo: a camera-facing additive billboard centred on the planet.
+//    The opaque globe occludes the billboard's inner disk, so only the soft
+//    outer halo outside the silhouette is visible. Because it always faces the
+//    camera it can NEVER leak as an off-axis ring (the failure mode of a
+//    BackSide shell seen off-centre). Sun-side brightness is driven by each
+//    halo pixel's world-space direction from the planet centre. ──
+const haloVertex = `
+varying vec2 vUv;
+varying vec3 vWorldPos;
+void main() {
+  vUv = uv;
+  vec4 wp = modelMatrix * vec4(position, 1.0);
+  vWorldPos = wp.xyz;
+  gl_Position = projectionMatrix * viewMatrix * wp;
+}
+`;
+
+const haloFragment = `
+uniform vec3 uSunDir;
+uniform vec3 uPlanetCenter;
+uniform float uPlanetR;   // planet radius in world units
+uniform float uHaloR;     // outer halo radius (plane half-size)
+uniform float uStrength;
+varying vec2 vUv;
+varying vec3 vWorldPos;
+void main() {
+  // Radial distance from the billboard centre, in plane-normalised units.
+  vec2 p = vUv * 2.0 - 1.0;
+  float d = length(p);
+  float edge = uPlanetR / uHaloR;          // where the planet silhouette sits
+  // Soft outward falloff: full at the limb, fading to zero at the outer edge.
+  float glow = smoothstep(1.0, edge, d);
+  glow *= glow;                            // tighten toward the planet
+  // Sun-side modulation: brighter where the halo pixel points toward the sun.
+  vec3 offDir = normalize(vWorldPos - uPlanetCenter);
+  float sun = dot(offDir, uSunDir);
+  float mod_ = 0.22 + 0.78 * smoothstep(-0.55, 0.55, sun);
+  vec3 col = mix(vec3(0.05, 0.22, 0.6), vec3(0.35, 0.62, 1.0), smoothstep(-0.3, 0.6, sun));
+  float a = glow * mod_ * uStrength;
+  gl_FragColor = vec4(col, a);
+}
+`;
+
 // ── Meteor: a round glowing head + long dissipating additive trail ──────────
 class Meteor {
   constructor({ r, inc, node, speed, phase, color, tail }, sprite) {
@@ -322,9 +365,28 @@ export default function SatelliteOrbit() {
     const cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(1.805, 96, 48), cloudMat);
     spinGroup.add(cloudMesh);
 
-    // The atmospheric halo is produced by the globe's own sun-anchored fresnel
-    // limb (see globeFragment) amplified by the bloom pass - there is no
-    // separate shell, which avoids the off-axis back-face leak entirely.
+    // Soft outward atmospheric halo (camera-facing additive billboard). Added
+    // to earthGroup so it follows the planet; re-oriented toward the camera
+    // every frame in animate(). Rendered after the (opaque) globe so depth
+    // hides its inner disk, leaving only the halo beyond the silhouette.
+    const PLANET_R = 1.78;
+    const HALO_R = PLANET_R * 1.18;
+    const haloMat = new THREE.ShaderMaterial({
+      vertexShader: haloVertex,
+      fragmentShader: haloFragment,
+      uniforms: {
+        uSunDir: { value: sunDir },
+        uPlanetCenter: { value: earthGroup.position.clone() },
+        uPlanetR: { value: PLANET_R },
+        uHaloR: { value: HALO_R },
+        uStrength: { value: 0.5 },
+      },
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+    const haloMesh = new THREE.Mesh(new THREE.PlaneGeometry(HALO_R * 2, HALO_R * 2), haloMat);
+    haloMesh.renderOrder = 2;
+    earthGroup.add(haloMesh);
 
     // ── Meteor trails — orbiting the globe's actual centre ──
     const sprite = makeHeadSprite();
@@ -453,6 +515,9 @@ export default function SatelliteOrbit() {
       starField.rotation.set(spin.rotX, spin.rotY, 0);
       // Clouds drift a touch faster than the surface for parallax.
       cloudMesh.rotation.y += dt * 0.006;
+      // Keep the halo billboard square to the camera (earthGroup is unrotated,
+      // so copying the camera quaternion orients it in world space).
+      haloMesh.quaternion.copy(camera.quaternion);
 
       // Meteor trails.
       meteors.forEach((m) => m.update(elapsed));
