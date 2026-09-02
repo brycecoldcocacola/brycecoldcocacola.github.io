@@ -112,23 +112,23 @@
     inset: 0;
     z-index: 2;
     background:
-      // Heavier horizontal gradient: dark on left where the text lives,
-      // gradually lighter on the right where the studio shows through.
+      // Directional horizontal gradient: dark behind the text column on the
+      // left, clearing to almost nothing on the right so the studio reads.
       linear-gradient(
         90deg,
-        rgba(7, 7, 10, 0.95) 0%,
-        rgba(7, 7, 10, 0.92) 30%,
-        rgba(7, 7, 10, 0.78) 55%,
-        rgba(7, 7, 10, 0.55) 78%,
-        rgba(7, 7, 10, 0.45) 100%
+        rgba(7, 7, 10, 0.88) 0%,
+        rgba(7, 7, 10, 0.72) 28%,
+        rgba(7, 7, 10, 0.40) 50%,
+        rgba(7, 7, 10, 0.12) 72%,
+        rgba(7, 7, 10, 0.0) 90%
       ),
       // Top + bottom cinematic vignette.
       linear-gradient(
         180deg,
-        rgba(7, 7, 10, 0.85) 0%,
-        rgba(7, 7, 10, 0) 18%,
-        rgba(7, 7, 10, 0) 62%,
-        rgba(7, 7, 10, 0.92) 100%
+        rgba(7, 7, 10, 0.7) 0%,
+        rgba(7, 7, 10, 0) 16%,
+        rgba(7, 7, 10, 0) 64%,
+        rgba(7, 7, 10, 0.85) 100%
       );
   }
 }
@@ -144,7 +144,7 @@
   z-index: 1;
   opacity: 0.9;
   // Grade it down so it reads as a backdrop, not as foreground UI.
-  filter: grayscale(0.26) contrast(1.05) brightness(0.45) saturate(1.22);
+  filter: grayscale(0.26) contrast(1.05) brightness(0.78) saturate(1.22);
   animation: tempoZoom 34s ease-in-out infinite alternate;
   transform-origin: center;
 }
@@ -166,16 +166,16 @@
     background:
       linear-gradient(
         90deg,
-        rgba(7, 7, 10, 0.96) 0%,
-        rgba(7, 7, 10, 0.92) 50%,
-        rgba(7, 7, 10, 0.78) 100%
+        rgba(7, 7, 10, 0.92) 0%,
+        rgba(7, 7, 10, 0.72) 50%,
+        rgba(7, 7, 10, 0.45) 100%
       ),
       linear-gradient(
         180deg,
-        rgba(7, 7, 10, 0.92) 0%,
+        rgba(7, 7, 10, 0.78) 0%,
         rgba(7, 7, 10, 0) 18%,
         rgba(7, 7, 10, 0) 60%,
-        rgba(7, 7, 10, 0.94) 100%
+        rgba(7, 7, 10, 0.85) 100%
       );
   }
 
