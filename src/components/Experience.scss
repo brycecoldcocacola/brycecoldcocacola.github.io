@@ -32,47 +32,104 @@
 }
 
 // Parallel Domain — sensor / neural-reconstruction grid.
+// Multiple layered gradients evoke LiDAR point clouds, sensor sweep glows and
+// the synthetic-data bounding boxes used to label training scenes.
 .company--pd .company__bg {
   background:
-    radial-gradient(ellipse 60% 50% at 82% 28%, rgba(56, 189, 248, 0.10), transparent 70%),
-    radial-gradient(ellipse 50% 45% at 12% 78%, rgba(129, 140, 248, 0.08), transparent 70%),
-    repeating-linear-gradient(0deg, rgba(148, 163, 184, 0.045) 0 1px, transparent 1px 44px),
-    repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.045) 0 1px, transparent 1px 44px);
+    // Large soft sensor glows
+    radial-gradient(ellipse 70% 55% at 88% 18%, rgba(56, 189, 248, 0.20), transparent 65%),
+    radial-gradient(ellipse 55% 50% at 8% 82%, rgba(129, 140, 248, 0.16), transparent 65%),
+    radial-gradient(ellipse 45% 35% at 60% 65%, rgba(244, 114, 182, 0.10), transparent 65%),
+    // Tighter accent hot-spots (read as LiDAR / camera clusters)
+    radial-gradient(circle 220px at 72% 35%, rgba(56, 189, 248, 0.16), transparent 60%),
+    radial-gradient(circle 180px at 28% 60%, rgba(167, 139, 250, 0.14), transparent 60%),
+    // Fine measurement grid
+    repeating-linear-gradient(0deg, rgba(148, 163, 184, 0.06) 0 1px, transparent 1px 50px),
+    repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.06) 0 1px, transparent 1px 50px),
+    // Coarser ruler grid on top, slightly stronger (graph-paper depth)
+    repeating-linear-gradient(0deg, rgba(56, 189, 248, 0.05) 0 1px, transparent 1px 200px),
+    repeating-linear-gradient(90deg, rgba(56, 189, 248, 0.05) 0 1px, transparent 1px 200px);
+
+  // Animated sensor-sweep line, slowly scanning the page top to bottom.
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(56, 189, 248, 0.0) 45%,
+      rgba(56, 189, 248, 0.18) 50%,
+      rgba(56, 189, 248, 0.0) 55%,
+      transparent 100%
+    );
+    animation: pdSweep 9s linear infinite;
+    pointer-events: none;
+  }
+
+  // Faint synthetic-data “bounding boxes” floating in the scene.
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      // box 1 (top-right, cyan)
+      linear-gradient(rgba(56, 189, 248, 0.55), rgba(56, 189, 248, 0.55)) 72% 22% / 140px 1px no-repeat,
+      linear-gradient(rgba(56, 189, 248, 0.55), rgba(56, 189, 248, 0.55)) 72% 32% / 140px 1px no-repeat,
+      linear-gradient(rgba(56, 189, 248, 0.55), rgba(56, 189, 248, 0.55)) 68% 27% / 1px 60px no-repeat,
+      linear-gradient(rgba(56, 189, 248, 0.55), rgba(56, 189, 248, 0.55)) 76% 27% / 1px 60px no-repeat,
+      // box 2 (left-mid, indigo)
+      linear-gradient(rgba(129, 140, 248, 0.5), rgba(129, 140, 248, 0.5)) 18% 62% / 180px 1px no-repeat,
+      linear-gradient(rgba(129, 140, 248, 0.5), rgba(129, 140, 248, 0.5)) 18% 76% / 180px 1px no-repeat,
+      linear-gradient(rgba(129, 140, 248, 0.5), rgba(129, 140, 248, 0.5)) 13% 69% / 1px 110px no-repeat,
+      linear-gradient(rgba(129, 140, 248, 0.5), rgba(129, 140, 248, 0.5)) 23% 69% / 1px 110px no-repeat,
+      // box 3 (bottom-right, magenta)
+      linear-gradient(rgba(244, 114, 182, 0.4), rgba(244, 114, 182, 0.4)) 60% 82% / 110px 1px no-repeat,
+      linear-gradient(rgba(244, 114, 182, 0.4), rgba(244, 114, 182, 0.4)) 60% 91% / 110px 1px no-repeat,
+      linear-gradient(rgba(244, 114, 182, 0.4), rgba(244, 114, 182, 0.4)) 56% 86.5% / 1px 50px no-repeat,
+      linear-gradient(rgba(244, 114, 182, 0.4), rgba(244, 114, 182, 0.4)) 64% 86.5% / 1px 50px no-repeat;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+}
+
+@keyframes pdSweep {
+  0%   { transform: translateY(-50%); }
+  100% { transform: translateY(100%); }
 }
 
 // Tempo — cinematic full-bleed backdrop built from tempo.fit media. The image
-// covers the entire viewport; a directional scrim keeps the left text column
-// crisp while letting the studio footage read across the rest of the page.
+// is rendered in its natural orientation and darkened with a strong directional
+// scrim so the text column stays crisp while the studio scene still reads on
+// the right side of the viewport.
 .company--tempo .company__bg {
   overflow: hidden;
   background: #07070a;
 
-  // Directional scrim — lighter than before since the flipped image now places
-  // the plain wall behind the text column, giving natural legibility without
-  // a heavy overlay.
   &::after {
     content: "";
     position: absolute;
     inset: 0;
     z-index: 2;
     background:
+      // Heavier horizontal gradient: dark on left where the text lives,
+      // gradually lighter on the right where the studio shows through.
       linear-gradient(
         90deg,
-        rgba(7, 7, 10, 0.85) 0%,
-        rgba(7, 7, 10, 0.70) 25%,
-        rgba(7, 7, 10, 0.40) 45%,
-        rgba(7, 7, 10, 0.10) 65%,
-        rgba(7, 7, 10, 0.0) 85%
+        rgba(7, 7, 10, 0.95) 0%,
+        rgba(7, 7, 10, 0.92) 30%,
+        rgba(7, 7, 10, 0.78) 55%,
+        rgba(7, 7, 10, 0.55) 78%,
+        rgba(7, 7, 10, 0.45) 100%
       ),
+      // Top + bottom cinematic vignette.
       linear-gradient(
         180deg,
         rgba(7, 7, 10, 0.85) 0%,
         rgba(7, 7, 10, 0) 18%,
         rgba(7, 7, 10, 0) 62%,
-        rgba(7, 7, 10, 0.9) 100%
-      ),
-      radial-gradient(circle 50% 60% at 26% 28%, rgba(244, 114, 182, 0.08), transparent 72%),
-      radial-gradient(circle 45% 55% at 60% 78%, rgba(168, 85, 247, 0.06), transparent 72%);
+        rgba(7, 7, 10, 0.92) 100%
+      );
   }
 }
 
@@ -87,7 +144,7 @@
   z-index: 1;
   opacity: 0.9;
   // Grade it down so it reads as a backdrop, not as foreground UI.
-  filter: grayscale(0.26) contrast(1.05) brightness(0.5) saturate(1.22);
+  filter: grayscale(0.26) contrast(1.05) brightness(0.45) saturate(1.22);
   animation: tempoZoom 34s ease-in-out infinite alternate;
   transform-origin: center;
 }
@@ -101,51 +158,24 @@
   }
 }
 
-// Flip the Tempo background so the plain wall sits behind the text column,
-// and position the equipment at the 2/3 mark. We widen the media element so
-// its centre (where the equipment lives) sits at ~65% of the viewport after
-// the flip — no translateX needed, so no left-edge gap.
-.company--tempo .company__media {
-  width: 130%;
-  right: auto;       // remove inset:0 constraint so the element overflows right
-  animation: tempoZoomFlipped 34s ease-in-out infinite alternate;
-}
-
-@keyframes tempoZoomFlipped {
-  from {
-    transform: scaleX(-1) scale(1.0);
-  }
-  to {
-    transform: scaleX(-1) scale(1.12);
-  }
-}
-
-// Small / portrait viewports: the source photo is 2.45:1, so cover crops it
-// to just the busy middle. Bias object-position toward the right of the
-// source (the clean wall) — after the scaleX(-1) flip that lands behind the
-// text column. Also strengthen the scrim so text stays crisp.
+// On small / portrait viewports, the source photo (2.45:1) is cropped to a
+// narrow centre slice by `cover`. Widen the scrim and use the full viewport
+// width for the text column so nothing collides with the studio equipment.
 @media (max-width: 860px) {
-  .company--tempo .company__media {
-    width: 100%;
-    right: 0;
-    object-position: 78% center;
-  }
-
   .company--tempo .company__bg::after {
     background:
       linear-gradient(
         90deg,
-        rgba(7, 7, 10, 0.95) 0%,
-        rgba(7, 7, 10, 0.88) 35%,
-        rgba(7, 7, 10, 0.55) 65%,
-        rgba(7, 7, 10, 0.2) 100%
+        rgba(7, 7, 10, 0.96) 0%,
+        rgba(7, 7, 10, 0.92) 50%,
+        rgba(7, 7, 10, 0.78) 100%
       ),
       linear-gradient(
         180deg,
-        rgba(7, 7, 10, 0.9) 0%,
+        rgba(7, 7, 10, 0.92) 0%,
         rgba(7, 7, 10, 0) 18%,
         rgba(7, 7, 10, 0) 60%,
-        rgba(7, 7, 10, 0.92) 100%
+        rgba(7, 7, 10, 0.94) 100%
       );
   }
 
@@ -192,6 +222,12 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
+}
+
+.company__blurb-sep {
+  display: inline-block;
+  margin-inline: 0.15em;
+  color: var(--text-faint);
 }
 
 // Timeline of roles

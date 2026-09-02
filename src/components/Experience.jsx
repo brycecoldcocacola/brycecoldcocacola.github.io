@@ -18,14 +18,13 @@ function TagRow({ tags }) {
   );
 }
 
-function Role({ title, period, meta, description }) {
+function Role({ title, period, description }) {
   return (
     <div className="role">
       <div className="role__top">
         <h4 className="role__title">{title}</h4>
         <span className="role__period">{period}</span>
       </div>
-      {meta && <p className="role__meta">{meta}</p>}
       {description && <p className="role__desc">{description}</p>}
     </div>
   );
@@ -34,13 +33,6 @@ function Role({ title, period, meta, description }) {
 export default function Experience() {
   return (
     <section id="experience" className="experience">
-      <div className="shell">
-        <Reveal className="section-label">
-          <span className="eyebrow">01</span>
-          <span className="section-label-text">Experience</span>
-        </Reveal>
-      </div>
-
       <div className="experience__list">
         {experience.map((company, i) => (
           <Reveal
@@ -82,9 +74,15 @@ export default function Experience() {
                       company.company
                     )}
                   </h3>
-                  {company.blurb && (
-                    <p className="company__blurb">{company.blurb}</p>
-                  )}
+                  <p className="company__blurb">
+                    {company.blurb}
+                    {company.location && (
+                      <>
+                        <span className="company__blurb-sep" aria-hidden="true"> · </span>
+                        {company.location}
+                      </>
+                    )}
+                  </p>
                 </div>
               </div>
 

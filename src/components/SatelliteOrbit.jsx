@@ -617,6 +617,16 @@ export default function SatelliteOrbit() {
         container.removeChild(renderer.domElement);
       }
       renderer.dispose();
+      // Force-release the underlying WebGL context. Without this, browsers
+      // hold the context open until GC and a remount (React StrictMode or
+      // HMR) can exhaust the per-page context limit and trigger:
+      //   "A WebGL context could not be created. Reason: Web page caused
+      //    context loss and was blocked"
+      try {
+        renderer.forceContextLoss?.();
+      } catch {
+        /* no-op */
+      }
     };
   }, []);
 

@@ -16,17 +16,16 @@ export const experience = [
     company: "Parallel Domain",
     url: "https://paralleldomain.com/",
     theme: "pd",
+    location: "San Francisco, CA",
     blurb: "Photorealistic synthetic data & simulation for autonomous robotics",
     roles: [
       {
         title: "Principal Software Developer",
         period: "Mar 2026 — Present",
-        meta: "San Francisco, CA",
       },
       {
         title: "Senior Software Developer",
         period: "Sep 2024 — Mar 2026",
-        meta: "San Francisco, CA",
         description: "Lead developer for customer-facing Python SDK."
       },
     ],
@@ -36,6 +35,7 @@ export const experience = [
     url: "https://tempo.fit/",
     theme: "tempo",
     highlight: true,
+    location: "San Francisco, CA",
     blurb: "AI-powered home gym & virtual personal training",
     backdrop: {
       // DatoCMS media served by tempo.fit — home-gym equipment still (no people).
@@ -47,21 +47,18 @@ export const experience = [
       {
         title: "Tech Lead Manager",
         period: "Mar 2024 — Sep 2024",
-        meta: "San Francisco, CA",
         description:
           "Led technical direction and execution of computer vision and machine learning.",
       },
       {
         title: "Senior Full Stack Developer",
         period: "Apr 2023 — Mar 2024",
-        meta: "San Francisco, CA",
         description:
           "Owned all machine learning tooling, infrastructure, data labeling, and analysis. Individual contributor on the ML team with an emphasis on improving in-house models.",
       },
       {
         title: "Full Stack Developer",
         period: "Apr 2021 — Apr 2023",
-        meta: "San Francisco, CA",
         description:
           "Built end-to-end tooling for the ML team: data collection, data exploration, data labeling, model development, training infrastructure, model deployment, and production monitoring.",
       },
@@ -73,19 +70,18 @@ export const experience = [
     url: "https://www.aero.org/",
     theme: "aerospace",
     orbit: true,
+    location: "Los Angeles, CA",
     blurb: "Satellite & space-systems engineering",
     roles: [
       {
         title: "Sr. Web & Graphics Software Developer",
         period: "Jun 2019 — Apr 2021",
-        meta: "Los Angeles, CA",
         description:
           "Built web-based visualization and propagation tools for real-time satellite constellations, plus the APIs and databases that enabled authoritative sources of truth for satellite information.",
       },
       {
         title: "Space Systems Engineer",
         period: "Jul 2015 — Jun 2019",
-        meta: "Los Angeles, CA",
         description:
           "Leveraged Python to extend state-of-the-art satellite communications analysis tools. Built internal tooling and automation supporting analysis frameworks, and led corporate L&D for Python.",
       },
