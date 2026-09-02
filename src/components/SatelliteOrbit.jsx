@@ -265,11 +265,38 @@ export default function SatelliteOrbit() {
     renderer.toneMappingExposure = 1.18;
     container.appendChild(renderer.domElement);
 
-    // Light roughly from the camera direction so the facing hemisphere is lit,
-    // with a little tilt for a soft terminator.
-    // Sun comes in low from the left, almost in-plane, so the right limb falls
-    // into night (with city lights) — matching the reference lighting.
-    const sunDir = new THREE.Vector3(-0.95, -0.08, 0.22).normalize();
+    // ── Real-time solar position ──────────────────────────────────────────────
+    // The shader compares world-space surface normals to a world-space sun
+    // direction. We compute the subsolar point from UTC, convert it to a
+    // direction in the globe's LOCAL frame, then rotate into world space using
+    // the globe's current rotation each frame. This keeps the terminator locked
+    // to real geography and consistent when the user drags.
+    const sunDir = new THREE.Vector3();          // world-space, updated each frame
+    const sunLocal = new THREE.Vector3();        // globe-local, recomputed every ~30s
+
+    function computeSubsolarDirection(date) {
+      const dayOfYear = Math.floor(
+        (date - new Date(Date.UTC(date.getUTCFullYear(), 0, 0))) / 86400000
+      );
+      // Solar declination (degrees) — Cooper's approximation
+      const declDeg = 23.44 * Math.sin((2 * Math.PI / 365) * (dayOfYear - 81));
+      // Subsolar longitude: degrees where solar noon occurs
+      const utcHours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
+      const lonDeg = 15 * (12 - utcHours); // positive = East
+
+      const declRad = THREE.MathUtils.degToRad(declDeg);
+      const lonRad = THREE.MathUtils.degToRad(lonDeg);
+
+      // Map (lat, lon) to unit-sphere direction matching Three.js SphereGeometry UV:
+      //   lon=0° → +X, lon=90°E → -Z, lat=90°N → +Y
+      sunLocal.set(
+        Math.cos(declRad) * Math.cos(lonRad),
+        Math.sin(declRad),
+        -Math.cos(declRad) * Math.sin(lonRad)
+      ).normalize();
+    }
+
+    computeSubsolarDirection(new Date());
 
     // ── Point-cloud stars ──
     const starCount = 8000;
@@ -422,11 +449,12 @@ export default function SatelliteOrbit() {
     });
 
     // ── Drag-to-spin state ──
-    const spin = { rotX: 0.08, rotY: -0.5, velX: 0, velY: 0 };
-    let ambient = 0;   // continuous drift applied to globe + satellites only
+    // Start with Americas facing viewer (matching real-time sun for US viewers)
+    const spin = { rotX: 0.12, rotY: 0, velX: 0, velY: 0 };
     let dragging = false;
     let lastX = 0;
     let lastY = 0;
+    let lastMoveTime = 0;
 
     const canvas = renderer.domElement;
     canvas.style.touchAction = 'none';
@@ -436,6 +464,7 @@ export default function SatelliteOrbit() {
       dragging = true;
       lastX = e.clientX;
       lastY = e.clientY;
+      lastMoveTime = performance.now();
       spin.velX = 0;
       spin.velY = 0;
       canvas.style.cursor = 'grabbing';
@@ -446,6 +475,7 @@ export default function SatelliteOrbit() {
       const dy = e.clientY - lastY;
       lastX = e.clientX;
       lastY = e.clientY;
+      lastMoveTime = performance.now();
       const k = 0.006;
       spin.rotY += dx * k;
       spin.rotX += dy * k;
@@ -456,6 +486,12 @@ export default function SatelliteOrbit() {
     const endDrag = () => {
       if (!dragging) return;
       dragging = false;
+      // If the mouse was stationary for >80ms before release, kill momentum
+      // so the globe doesn't suddenly spin from stale velocity.
+      if (performance.now() - lastMoveTime > 80) {
+        spin.velX = 0;
+        spin.velY = 0;
+      }
       canvas.style.cursor = 'grab';
     };
     canvas.addEventListener('pointerdown', onPointerDown);
@@ -467,6 +503,11 @@ export default function SatelliteOrbit() {
     const start = performance.now();
     let prevTime = performance.now();
     let running = true;
+    let lastSunUpdate = 0;
+
+    // Reusable objects to avoid per-frame allocation.
+    const rotMatrix = new THREE.Matrix4();
+    const rotMatrixInner = new THREE.Matrix4();
 
     function animate() {
       if (!running) return;
@@ -477,28 +518,44 @@ export default function SatelliteOrbit() {
       prevTime = now;
       const elapsed = (now - start) / 1000;
 
-      // Continuous drift applies only to the globe and satellites; the starfield
-      // never spins on its own, so the sky stays put until you grab it.
-      ambient += dt * 0.015;
+      // Update sun direction every 30 seconds to track real-time solar motion.
+      if (now - lastSunUpdate > 30000) {
+        computeSubsolarDirection(new Date());
+        lastSunUpdate = now;
+      }
+
       if (!dragging) {
         spin.velX *= 0.97;
         spin.velY *= 0.97;
         spin.rotY += spin.velY;
         spin.rotX += spin.velX;
         spin.rotX = Math.max(-0.6, Math.min(0.6, spin.rotX));
+      } else {
+        // During drag, rapidly decay velocity each frame so that if the pointer
+        // stops moving before release, velocity is already near-zero.
+        spin.velX *= 0.6;
+        spin.velY *= 0.6;
       }
-      const rotY = ambient + spin.rotY;
-      spinGroup.rotation.set(spin.rotX, rotY, 0);
-      // Spin the satellite / meteor trails with the planet so the whole system
-      // turns as one. The atmosphere halo stays anchored to the sun direction.
-      meteorGroup.rotation.set(spin.rotX, rotY, 0);
-      // Starfield follows user drag only - no idle spin, no ambient drift.
+
+      spinGroup.rotation.set(spin.rotX, spin.rotY, 0);
+      // Meteor / satellite orbits follow the globe.
+      meteorGroup.rotation.set(spin.rotX, spin.rotY, 0);
+      // Starfield follows user drag only — no idle spin.
       starField.rotation.set(spin.rotX, spin.rotY, 0);
       // Clouds drift a touch faster than the surface for parallax.
       cloudMesh.rotation.y += dt * 0.006;
-      // Keep the halo billboard square to the camera (earthGroup is unrotated,
-      // so copying the camera quaternion orients it in world space).
+      // Keep the halo billboard square to the camera.
       haloMesh.quaternion.copy(camera.quaternion);
+
+      // Transform the globe-local sun direction into world space using the
+      // globe's current rotation. This locks the terminator to the globe
+      // geometry: dragging the globe rotates both the surface normals AND the
+      // sun direction by the same rotation, so the day/night boundary appears
+      // fixed relative to the map.
+      rotMatrix.makeRotationX(spin.rotX);
+      rotMatrixInner.makeRotationY(spin.rotY);
+      rotMatrix.multiply(rotMatrixInner);
+      sunDir.copy(sunLocal).applyMatrix4(rotMatrix).normalize();
 
       // Meteor trails.
       meteors.forEach((m) => m.update(elapsed));

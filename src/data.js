@@ -16,16 +16,18 @@ export const experience = [
     company: "Parallel Domain",
     url: "https://paralleldomain.com/",
     theme: "pd",
-    blurb: "Photorealistic synthetic data & simulation for AVs, robotics, and AI",
+    blurb: "Photorealistic synthetic data & simulation for autonomous robotics",
     roles: [
       {
         title: "Principal Software Developer",
         period: "Mar 2026 — Present",
-        meta: "San Francisco, CA · Hybrid",
+        meta: "San Francisco, CA",
       },
       {
         title: "Senior Software Developer",
         period: "Sep 2024 — Mar 2026",
+        meta: "San Francisco, CA",
+        description: "Lead developer for customer-facing Python SDK."
       },
     ],
   },
@@ -45,26 +47,26 @@ export const experience = [
       {
         title: "Tech Lead Manager",
         period: "Mar 2024 — Sep 2024",
-        meta: "San Francisco Bay Area · Hybrid",
+        meta: "San Francisco, CA",
         description:
-          "Led technical direction of computer vision and machine learning at Tempo.",
+          "Led technical direction and execution of computer vision and machine learning.",
       },
       {
         title: "Senior Full Stack Developer",
         period: "Apr 2023 — Mar 2024",
-        meta: "San Francisco Bay Area · Hybrid",
+        meta: "San Francisco, CA",
         description:
-          "Owned all machine-learning tooling, infrastructure, data labeling, and analysis. Individual contributor on the ML team with an emphasis on automating CV configuration per exercise and driving improvements to in-house models.",
+          "Owned all machine learning tooling, infrastructure, data labeling, and analysis. Individual contributor on the ML team with an emphasis on improving in-house models.",
       },
       {
         title: "Full Stack Developer",
         period: "Apr 2021 — Apr 2023",
         meta: "San Francisco, CA",
         description:
-          "Built end-to-end tooling for the ML team: data collection, exploration, labeling, truth-data management, development workflows, cloud compute for training, model management and deployment, production monitoring, and analysis.",
+          "Built end-to-end tooling for the ML team: data collection, data exploration, data labeling, model development, training infrastructure, model deployment, and production monitoring.",
       },
     ],
-    skills: ["Python", "AWS", "S3", "Machine Learning", "Computer Vision"],
+    skills: ["Python", "AWS", "SQL", "Machine Learning", "Computer Vision"],
   },
   {
     company: "The Aerospace Corporation",
@@ -78,7 +80,7 @@ export const experience = [
         period: "Jun 2019 — Apr 2021",
         meta: "Los Angeles, CA",
         description:
-          "Built web-based visualization and propagation tools for real-time satellite constellations, plus the APIs and databases that enabled authoritative sources of truth for satellite information. Led technical projects on web-based tooling.",
+          "Built web-based visualization and propagation tools for real-time satellite constellations, plus the APIs and databases that enabled authoritative sources of truth for satellite information.",
       },
       {
         title: "Space Systems Engineer",
@@ -88,7 +90,7 @@ export const experience = [
           "Leveraged Python to extend state-of-the-art satellite communications analysis tools. Built internal tooling and automation supporting analysis frameworks, and led corporate L&D for Python.",
       },
     ],
-    skills: ["TypeScript", "JavaScript", "Python", "MATLAB"],
+    skills: ["Python", "TypeScript", "MongoDB", "Three.js"],
   },
 ];
 

@@ -47,9 +47,9 @@
   overflow: hidden;
   background: #07070a;
 
-  // Directional scrim — darkest at the far left behind the text, easing off to
-  // reveal the image toward the right. Top/bottom fades blend the photo into the
-  // page edge-to-edge; soft magenta/violet tints carry the duotone mood.
+  // Directional scrim — lighter than before since the flipped image now places
+  // the plain wall behind the text column, giving natural legibility without
+  // a heavy overlay.
   &::after {
     content: "";
     position: absolute;
@@ -58,22 +58,21 @@
     background:
       linear-gradient(
         90deg,
-        rgba(7, 7, 10, 0.97) 0%,
-        rgba(7, 7, 10, 0.88) 30%,
-        rgba(7, 7, 10, 0.62) 50%,
-        rgba(7, 7, 10, 0.26) 66%,
-        rgba(7, 7, 10, 0.08) 85%,
-        rgba(7, 7, 10, 0.04) 100%
+        rgba(7, 7, 10, 0.85) 0%,
+        rgba(7, 7, 10, 0.70) 25%,
+        rgba(7, 7, 10, 0.40) 45%,
+        rgba(7, 7, 10, 0.10) 65%,
+        rgba(7, 7, 10, 0.0) 85%
       ),
       linear-gradient(
         180deg,
-        rgba(7, 7, 10, 0.9) 0%,
-        rgba(7, 7, 10, 0) 20%,
+        rgba(7, 7, 10, 0.85) 0%,
+        rgba(7, 7, 10, 0) 18%,
         rgba(7, 7, 10, 0) 62%,
-        rgba(7, 7, 10, 0.95) 100%
+        rgba(7, 7, 10, 0.9) 100%
       ),
-      radial-gradient(circle 50% 60% at 74% 28%, rgba(244, 114, 182, 0.1), transparent 72%),
-      radial-gradient(circle 45% 55% at 40% 78%, rgba(168, 85, 247, 0.07), transparent 72%);
+      radial-gradient(circle 50% 60% at 26% 28%, rgba(244, 114, 182, 0.08), transparent 72%),
+      radial-gradient(circle 45% 55% at 60% 78%, rgba(168, 85, 247, 0.06), transparent 72%);
   }
 }
 
@@ -99,6 +98,22 @@
   }
   to {
     transform: scale(1.18);
+  }
+}
+
+// Flip the Tempo background so the plain wall sits behind the text column,
+// and push the studio equipment to the 2/3 mark. We use a larger scale to
+// ensure no left-edge gap from the translate.
+.company--tempo .company__media {
+  animation: tempoZoomFlipped 34s ease-in-out infinite alternate;
+}
+
+@keyframes tempoZoomFlipped {
+  from {
+    transform: translateX(20%) scaleX(-1) scale(1.45);
+  }
+  to {
+    transform: translateX(20%) scaleX(-1) scale(1.58);
   }
 }
 
