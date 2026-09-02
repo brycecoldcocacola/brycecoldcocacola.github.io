@@ -45,7 +45,11 @@ export default function Experience() {
                 <img
                   className="company__media"
                   src={company.backdrop.image}
+                  srcSet={company.backdrop.srcset}
+                  sizes={company.backdrop.sizes || "100vw"}
                   alt=""
+                  decoding="async"
+                  loading="lazy"
                 />
               )}
               {company.backdrop && company.backdrop.video && (

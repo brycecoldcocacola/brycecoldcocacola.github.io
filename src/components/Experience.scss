@@ -31,71 +31,41 @@
   pointer-events: none;
 }
 
-// Parallel Domain — sensor / neural-reconstruction grid.
-// Multiple layered gradients evoke LiDAR point clouds, sensor sweep glows and
-// the synthetic-data bounding boxes used to label training scenes.
+// Parallel Domain — real sensor-suite cover art from paralleldomain.com.
+// The image is split horizontally: left half is a nearly-black LiDAR point
+// cloud, right half is a bright RGB render with bounding-box annotations plus
+// a colour-mapped depth map. The dark left side naturally carries the text
+// column, so only a soft directional scrim is needed — no synthetic grids or
+// animated overlays required.
 .company--pd .company__bg {
-  background:
-    // Large soft sensor glows
-    radial-gradient(ellipse 70% 55% at 88% 18%, rgba(56, 189, 248, 0.20), transparent 65%),
-    radial-gradient(ellipse 55% 50% at 8% 82%, rgba(129, 140, 248, 0.16), transparent 65%),
-    radial-gradient(ellipse 45% 35% at 60% 65%, rgba(244, 114, 182, 0.10), transparent 65%),
-    // Tighter accent hot-spots (read as LiDAR / camera clusters)
-    radial-gradient(circle 220px at 72% 35%, rgba(56, 189, 248, 0.16), transparent 60%),
-    radial-gradient(circle 180px at 28% 60%, rgba(167, 139, 250, 0.14), transparent 60%),
-    // Fine measurement grid
-    repeating-linear-gradient(0deg, rgba(148, 163, 184, 0.06) 0 1px, transparent 1px 50px),
-    repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.06) 0 1px, transparent 1px 50px),
-    // Coarser ruler grid on top, slightly stronger (graph-paper depth)
-    repeating-linear-gradient(0deg, rgba(56, 189, 248, 0.05) 0 1px, transparent 1px 200px),
-    repeating-linear-gradient(90deg, rgba(56, 189, 248, 0.05) 0 1px, transparent 1px 200px);
+  overflow: hidden;
+  background: #05060a;
 
-  // Animated sensor-sweep line, slowly scanning the page top to bottom.
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      180deg,
-      transparent 0%,
-      rgba(56, 189, 248, 0.0) 45%,
-      rgba(56, 189, 248, 0.18) 50%,
-      rgba(56, 189, 248, 0.0) 55%,
-      transparent 100%
-    );
-    animation: pdSweep 9s linear infinite;
-    pointer-events: none;
-  }
-
-  // Faint synthetic-data “bounding boxes” floating in the scene.
   &::after {
     content: "";
     position: absolute;
     inset: 0;
+    z-index: 2;
     background:
-      // box 1 (top-right, cyan)
-      linear-gradient(rgba(56, 189, 248, 0.55), rgba(56, 189, 248, 0.55)) 72% 22% / 140px 1px no-repeat,
-      linear-gradient(rgba(56, 189, 248, 0.55), rgba(56, 189, 248, 0.55)) 72% 32% / 140px 1px no-repeat,
-      linear-gradient(rgba(56, 189, 248, 0.55), rgba(56, 189, 248, 0.55)) 68% 27% / 1px 60px no-repeat,
-      linear-gradient(rgba(56, 189, 248, 0.55), rgba(56, 189, 248, 0.55)) 76% 27% / 1px 60px no-repeat,
-      // box 2 (left-mid, indigo)
-      linear-gradient(rgba(129, 140, 248, 0.5), rgba(129, 140, 248, 0.5)) 18% 62% / 180px 1px no-repeat,
-      linear-gradient(rgba(129, 140, 248, 0.5), rgba(129, 140, 248, 0.5)) 18% 76% / 180px 1px no-repeat,
-      linear-gradient(rgba(129, 140, 248, 0.5), rgba(129, 140, 248, 0.5)) 13% 69% / 1px 110px no-repeat,
-      linear-gradient(rgba(129, 140, 248, 0.5), rgba(129, 140, 248, 0.5)) 23% 69% / 1px 110px no-repeat,
-      // box 3 (bottom-right, magenta)
-      linear-gradient(rgba(244, 114, 182, 0.4), rgba(244, 114, 182, 0.4)) 60% 82% / 110px 1px no-repeat,
-      linear-gradient(rgba(244, 114, 182, 0.4), rgba(244, 114, 182, 0.4)) 60% 91% / 110px 1px no-repeat,
-      linear-gradient(rgba(244, 114, 182, 0.4), rgba(244, 114, 182, 0.4)) 56% 86.5% / 1px 50px no-repeat,
-      linear-gradient(rgba(244, 114, 182, 0.4), rgba(244, 114, 182, 0.4)) 64% 86.5% / 1px 50px no-repeat;
-    opacity: 0.55;
-    pointer-events: none;
+      // Directional horizontal scrim: heavy on the left where the copy lives,
+      // clearing to zero over the RGB/depth panel on the right.
+      linear-gradient(
+        90deg,
+        rgba(5, 6, 10, 0.92) 0%,
+        rgba(5, 6, 10, 0.78) 22%,
+        rgba(5, 6, 10, 0.42) 44%,
+        rgba(5, 6, 10, 0.10) 66%,
+        rgba(5, 6, 10, 0.00) 88%
+      ),
+      // Cinematic top + bottom vignette so the section bleeds into the page.
+      linear-gradient(
+        180deg,
+        rgba(5, 6, 10, 0.65) 0%,
+        rgba(5, 6, 10, 0) 18%,
+        rgba(5, 6, 10, 0) 62%,
+        rgba(5, 6, 10, 0.88) 100%
+      );
   }
-}
-
-@keyframes pdSweep {
-  0%   { transform: translateY(-50%); }
-  100% { transform: translateY(100%); }
 }
 
 // Tempo — cinematic full-bleed backdrop built from tempo.fit media. The image
@@ -133,7 +103,8 @@
   }
 }
 
-// Media fills the whole viewport as an ambient layer behind the content.
+// Base positioning for any backdrop media — per-theme rules add filter,
+// animation, and object-position.
 .company__media {
   position: absolute;
   inset: 0;
@@ -142,8 +113,58 @@
   object-fit: cover;
   object-position: center;
   z-index: 1;
+}
+
+// Parallel Domain: keep the sensor data crisp, only grade down slightly and
+// drift very slowly so the still frame reads as an ambient backdrop.
+.company--pd .company__media {
+  opacity: 0.92;
+  filter: contrast(1.06) brightness(0.88) saturate(1.02);
+  object-position: 55% center;
+  animation: pdDrift 42s ease-in-out infinite alternate;
+  transform-origin: 55% center;
+}
+
+@keyframes pdDrift {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1.09);
+  }
+}
+
+// On narrow / portrait viewports, `cover` would crop to the busy LiDAR→RGB
+// boundary and the bright RGB / depth panels bleed into the text column.
+// Push the visible slice far left so the entire viewport sits over the dark
+// LiDAR cloud, and widen the scrim to cover the whole width.
+@media (max-width: 860px) {
+  .company--pd .company__media {
+    object-position: 3% center;
+  }
+
+  .company--pd .company__bg::after {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(5, 6, 10, 0.95) 0%,
+        rgba(5, 6, 10, 0.86) 55%,
+        rgba(5, 6, 10, 0.72) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(5, 6, 10, 0.72) 0%,
+        rgba(5, 6, 10, 0) 20%,
+        rgba(5, 6, 10, 0) 58%,
+        rgba(5, 6, 10, 0.88) 100%
+      );
+  }
+}
+
+// Tempo: heavier cinematic grade (source photo is much brighter than PD art),
+// plus the slow Ken-Burns zoom.
+.company--tempo .company__media {
   opacity: 0.9;
-  // Grade it down so it reads as a backdrop, not as foreground UI.
   filter: grayscale(0.26) contrast(1.05) brightness(0.78) saturate(1.22);
   animation: tempoZoom 34s ease-in-out infinite alternate;
   transform-origin: center;
@@ -331,6 +352,26 @@
   text-align: left;
   // Keep glyphs crisp where the footage shows through behind the text.
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6), 0 2px 16px rgba(0, 0, 0, 0.45);
+}
+
+// Parallel Domain — text column pinned to the left half of the viewport so it
+// sits over the dark LiDAR cloud rather than the bright RGB / depth panel.
+.company--pd .company__content {
+  max-width: none;
+  width: min(48%, 560px);
+  margin-inline-start: clamp(1.25rem, 5vw, 6rem);
+  margin-inline-end: 0;
+  padding-right: 0;
+  text-align: left;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7), 0 2px 18px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 860px) {
+  .company--pd .company__content {
+    width: 100%;
+    max-width: 100%;
+    margin-inline-start: 0;
+  }
 }
 
 // Aerospace — the globe bleeds off the right edge, so pin the text to the left
