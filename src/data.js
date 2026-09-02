@@ -16,6 +16,7 @@ export const experience = [
     company: "Parallel Domain",
     url: "https://paralleldomain.com/",
     theme: "pd",
+    id: "pd",
     location: "San Francisco, CA",
     blurb: "Photorealistic synthetic data & simulation for autonomous robotics",
     backdrop: {
@@ -43,6 +44,7 @@ export const experience = [
     company: "Tempo",
     url: "https://tempo.fit/",
     theme: "tempo",
+    id: "tempo",
     highlight: true,
     location: "San Francisco, CA",
     blurb: "AI-powered home gym & virtual personal training",
@@ -78,6 +80,7 @@ export const experience = [
     company: "The Aerospace Corporation",
     url: "https://www.aero.org/",
     theme: "aerospace",
+    id: "aerospace",
     orbit: true,
     location: "Los Angeles, CA",
     blurb: "Satellite & space-systems engineering",

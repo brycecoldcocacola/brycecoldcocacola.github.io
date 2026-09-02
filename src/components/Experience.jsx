@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { experience } from "../data";
 import Reveal from "./Reveal";
 import "./Experience.scss";
@@ -21,22 +21,56 @@ function TagRow({ tags }) {
 function Role({ title, period, description }) {
   return (
     <div className="role">
-      <div className="role__top">
-        <h4 className="role__title">{title}</h4>
-        <span className="role__period">{period}</span>
-      </div>
+      <h4 className="role__title">{title}</h4>
+      <span className="role__period">{period}</span>
       {description && <p className="role__desc">{description}</p>}
     </div>
   );
 }
 
 export default function Experience() {
+  // When the browser lands directly on a deep link (e.g. /#aerospace), the
+  // initial hash scroll can be reset by mandatory scroll-snapping before the
+  // lazy-loaded backdrops finish laying out. Re-assert the target a few times
+  // over the first second, but bail out the moment the user scrolls.
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (!id) return undefined;
+
+    let cancelled = false;
+    const scrollToTarget = () => {
+      if (cancelled) return;
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView();
+    };
+
+    const timers = [0, 250, 600, 1000].map((ms) =>
+      window.setTimeout(scrollToTarget, ms),
+    );
+    const stop = () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+      window.removeEventListener("wheel", stop);
+      window.removeEventListener("touchstart", stop);
+      window.removeEventListener("keydown", stop);
+    };
+    window.addEventListener("wheel", stop, { passive: true });
+    window.addEventListener("touchstart", stop, { passive: true });
+    window.addEventListener("keydown", stop);
+
+    return () => {
+      stop();
+    };
+  }, []);
+
   return (
     <section id="experience" className="experience">
       <div className="experience__list">
         {experience.map((company, i) => (
           <Reveal
             key={company.company}
+            as="section"
+            id={company.id}
             className={`company ${company.theme ? `company--${company.theme}` : ""}`}
             delay={i * 60}
           >
@@ -78,15 +112,10 @@ export default function Experience() {
                       company.company
                     )}
                   </h3>
-                  <p className="company__blurb">
-                    {company.blurb}
-                    {company.location && (
-                      <>
-                        <span className="company__blurb-sep" aria-hidden="true"> · </span>
-                        {company.location}
-                      </>
-                    )}
-                  </p>
+                  <p className="company__blurb">{company.blurb}</p>
+                  {company.location && (
+                    <p className="company__location">{company.location}</p>
+                  )}
                 </div>
               </div>
 

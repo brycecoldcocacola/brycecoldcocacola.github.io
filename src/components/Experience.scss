@@ -245,10 +245,14 @@
   color: var(--text-muted);
 }
 
-.company__blurb-sep {
-  display: inline-block;
-  margin-inline: 0.15em;
-  color: var(--text-faint);
+// Location line sits directly under the subtitle and reuses the accent colour
+// of the role time-periods so the two read as related metadata.
+.company__location {
+  margin-top: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  color: var(--accent);
 }
 
 // Timeline of roles
@@ -293,14 +297,6 @@
   }
 }
 
-.role__top {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.25rem 1rem;
-}
-
 .role__title {
   font-size: 1.2rem;
   font-weight: 600;
@@ -308,7 +304,10 @@
   transition: color 0.3s var(--ease);
 }
 
+// Time period sits on its own line directly beneath the role title.
 .role__period {
+  display: block;
+  margin-top: 0.3rem;
   font-family: var(--font-mono);
   font-size: 0.76rem;
   letter-spacing: 0.04em;
