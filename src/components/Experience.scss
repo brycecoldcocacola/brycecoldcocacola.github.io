@@ -102,18 +102,21 @@
 }
 
 // Flip the Tempo background so the plain wall sits behind the text column,
-// and push the studio equipment to the 2/3 mark. We use a larger scale to
-// ensure no left-edge gap from the translate.
+// and position the equipment at the 2/3 mark. We widen the media element so
+// its centre (where the equipment lives) sits at ~65% of the viewport after
+// the flip — no translateX needed, so no left-edge gap.
 .company--tempo .company__media {
+  width: 130%;
+  right: auto;       // remove inset:0 constraint so the element overflows right
   animation: tempoZoomFlipped 34s ease-in-out infinite alternate;
 }
 
 @keyframes tempoZoomFlipped {
   from {
-    transform: translateX(12%) scaleX(-1) scale(1.15);
+    transform: scaleX(-1) scale(1.0);
   }
   to {
-    transform: translateX(12%) scaleX(-1) scale(1.28);
+    transform: scaleX(-1) scale(1.12);
   }
 }
 
