@@ -1,0 +1,38 @@
+name: Refresh satellite TLEs
+
+# Pulls fresh CelesTrak GP data and rebuilds src/data/satellites.json.
+# Run by hand from the Actions tab ("Run workflow"), or on the built-in cadence.
+# The resulting commit is tagged [skip ci] so it does not spin up a Pages deploy.
+on:
+  workflow_dispatch:
+  schedule:
+    # Twice a day. TLEs go stale over a few days; this keeps them fresh.
+    - cron: "17 6,18 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch fresh TLE data
+        run: node scripts/fetch-satellites.mjs
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- src/data/satellites.json; then
+            echo "No changes to satellites.json."
+            exit 0
+          fi
+          git add src/data/satellites.json
+          git commit -m "chore(data): refresh satellite TLEs [skip ci]"
+          git push

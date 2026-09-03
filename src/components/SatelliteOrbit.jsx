@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { SatelliteField } from './SatelliteField.js';
 
 // Master-Maps style Blue Marble textures (served via jsDelivr with CORS so
 // WebGL can sample them): 4096 day / night + ocean specular.
@@ -153,93 +154,6 @@ void main() {
   gl_FragColor = vec4(col, a);
 }
 `;
-
-// ── Meteor: a round glowing head + long dissipating additive trail ──────────
-class Meteor {
-  constructor({ r, inc, node, speed, phase, color, tail }, sprite) {
-    this.radius = r;
-    this.inc = inc;
-    this.node = node;
-    this.speed = speed;
-    this.phase = phase;
-    this.color = color;
-    this.tail = tail;
-    this.samples = 64;
-
-    const geo = new THREE.BufferGeometry();
-    const positions = new Float32Array(this.samples * 3);
-    const colors = new Float32Array(this.samples * 3);
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    this.line = new THREE.Line(geo, new THREE.LineBasicMaterial({
-      vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
-    }));
-    this.line.frustumCulled = false;
-
-    // Round head sprite so it never renders as a square point.
-    this.head = new THREE.Points(
-      new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(3), 3)),
-      new THREE.PointsMaterial({
-        size: 0.12, sizeAttenuation: true, transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, map: sprite, color: color, alphaTest: 0.02,
-      }),
-    );
-    this.head.frustumCulled = false;
-  }
-
-  posAt(t, out) {
-    const theta = this.phase + t * this.speed;
-    const x = Math.cos(theta) * this.radius;
-    const y = Math.sin(theta) * this.radius;
-    const ci = Math.cos(this.inc), si = Math.sin(this.inc);
-    const y2 = y * ci, z2 = y * si;
-    const cn = Math.cos(this.node), sn = Math.sin(this.node);
-    return out.set(x * cn + z2 * sn, y2, -x * sn + z2 * cn);
-  }
-
-  update(t) {
-    const posAttr = this.line.geometry.getAttribute('position');
-    const colAttr = this.line.geometry.getAttribute('color');
-    const tmp = new THREE.Vector3();
-    for (let i = 0; i < this.samples; i++) {
-      const tt = t - (i / (this.samples - 1)) * this.tail;
-      this.posAt(tt, tmp);
-      posAttr.setXYZ(i, tmp.x, tmp.y, tmp.z);
-      const f = Math.pow(1 - i / this.samples, 2.2);
-      colAttr.setXYZ(i, this.color.r * f * 1.4, this.color.g * f * 1.4, this.color.b * f * 1.4);
-    }
-    posAttr.needsUpdate = true;
-    colAttr.needsUpdate = true;
-    this.posAt(t, tmp);
-    const hAttr = this.head.geometry.getAttribute('position');
-    hAttr.setXYZ(0, tmp.x, tmp.y, tmp.z);
-    hAttr.needsUpdate = true;
-  }
-
-  dispose() {
-    this.line.geometry.dispose();
-    this.line.material.dispose();
-    this.head.geometry.dispose();
-    this.head.material.dispose();
-  }
-}
-
-// ── Shared radial-gradient sprite (round soft head) ─────────────────────────
-function makeHeadSprite() {
-  const s = 64;
-  const c = document.createElement('canvas');
-  c.width = c.height = s;
-  const ctx = c.getContext('2d');
-  const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
-  g.addColorStop(0, 'rgba(255,255,255,1)');
-  g.addColorStop(0.35, 'rgba(255,255,255,0.85)');
-  g.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, s, s);
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
-}
 
 export default function SatelliteOrbit() {
   const mountRef = useRef(null);
@@ -396,42 +310,14 @@ export default function SatelliteOrbit() {
     haloMesh.renderOrder = 2;
     earthGroup.add(haloMesh);
 
-    // ── Meteor trails — orbiting the globe's actual centre ──
-    const sprite = makeHeadSprite();
-    const meteorGroup = new THREE.Group();
-    meteorGroup.position.copy(earthGroup.position);
-    scene.add(meteorGroup);
-
-    // Orbital field: a mix of low passes hugging the globe and high, wide orbits
-    // whose far sides reach into the empty space on the left of the page.
-    const meteorDefs = [
-      // Low, tight passes that clearly hug the planet.
-      { r: 1.9, inc: 0.55, node: 0.20, speed: 0.10, phase: 0.0, color: new THREE.Color('#ffd9a0'), tail: 9 },
-      { r: 1.97, inc: -0.90, node: 1.10, speed: -0.085, phase: 2.1, color: new THREE.Color('#a0d4ff'), tail: 11 },
-      { r: 2.03, inc: 1.30, node: -0.60, speed: 0.07, phase: 4.2, color: new THREE.Color('#ffe0c0'), tail: 13 },
-      { r: 2.08, inc: 0.25, node: -1.60, speed: 0.095, phase: 1.1, color: new THREE.Color('#ff9e80'), tail: 8 },
-      { r: 2.13, inc: -1.60, node: 2.40, speed: -0.065, phase: 5.4, color: new THREE.Color('#9ee8ff'), tail: 12 },
-      { r: 2.18, inc: 0.85, node: 0.05, speed: 0.055, phase: 3.0, color: new THREE.Color('#ffe6b0'), tail: 14 },
-      { r: 1.86, inc: 2.10, node: 1.70, speed: 0.115, phase: 0.6, color: new THREE.Color('#ffc0d0'), tail: 7 },
-      { r: 2.24, inc: 0.15, node: 2.05, speed: -0.09, phase: 4.8, color: new THREE.Color('#ff8a8a'), tail: 10 },
-      // Mid-range orbits.
-      { r: 2.45, inc: -0.35, node: 3.10, speed: 0.05, phase: 1.7, color: new THREE.Color('#c7b0ff'), tail: 15 },
-      { r: 2.62, inc: 1.05, node: -1.20, speed: 0.045, phase: 2.8, color: new THREE.Color('#bfe6ff'), tail: 16 },
-      { r: 2.80, inc: -0.65, node: 0.75, speed: -0.04, phase: 5.0, color: new THREE.Color('#ffe0a8'), tail: 17 },
-      // High, wide orbits reaching far out to fill the left of the viewport.
-      { r: 3.05, inc: 0.45, node: -0.35, speed: 0.034, phase: 0.9, color: new THREE.Color('#ffd0b0'), tail: 18 },
-      { r: 3.25, inc: -1.25, node: 1.85, speed: -0.03, phase: 3.6, color: new THREE.Color('#a8c8ff'), tail: 19 },
-      { r: 3.45, inc: 1.55, node: -2.05, speed: 0.026, phase: 4.9, color: new THREE.Color('#d8c0ff'), tail: 20 },
-      { r: 3.65, inc: -0.20, node: 2.75, speed: 0.022, phase: 1.4, color: new THREE.Color('#ffe8c8'), tail: 22 },
-      { r: 3.90, inc: 0.95, node: -1.75, speed: -0.02, phase: 5.8, color: new THREE.Color('#aee0ff'), tail: 24 },
-    ];
-    const meteors = meteorDefs.map((d) => new Meteor(d, sprite));
-    meteors.forEach((m) => {
-      m.line.frustumCulled = false;
-      m.head.frustumCulled = false;
-      meteorGroup.add(m.line);
-      meteorGroup.add(m.head);
-    });
+    // ── Real satellite constellation, orbiting the globe's actual centre ──
+    // A group centred on the planet that follows the user's drag rotation; the
+    // SatelliteField adds a GMST-counter-rotated child inside so live SGP4
+    // positions and full-orbit rings stay glued together (see that module).
+    const satGroup = new THREE.Group();
+    satGroup.position.copy(earthGroup.position);
+    scene.add(satGroup);
+    const satField = new SatelliteField(satGroup);
 
     // Load Blue Marble textures, then swap into uniforms.
     let disposed = false;
@@ -500,7 +386,6 @@ export default function SatelliteOrbit() {
     window.addEventListener('pointercancel', endDrag);
 
     // ── Animation ──
-    const start = performance.now();
     let prevTime = performance.now();
     let running = true;
     let lastSunUpdate = 0;
@@ -516,7 +401,6 @@ export default function SatelliteOrbit() {
       const now = performance.now();
       const dt = Math.min((now - prevTime) / 1000, 0.1);
       prevTime = now;
-      const elapsed = (now - start) / 1000;
 
       // Update sun direction every 30 seconds to track real-time solar motion.
       if (now - lastSunUpdate > 30000) {
@@ -538,8 +422,8 @@ export default function SatelliteOrbit() {
       }
 
       spinGroup.rotation.set(spin.rotX, spin.rotY, 0);
-      // Meteor / satellite orbits follow the globe.
-      meteorGroup.rotation.set(spin.rotX, spin.rotY, 0);
+      // Real satellite orbits follow the globe's drag rotation.
+      satGroup.rotation.set(spin.rotX, spin.rotY, 0);
       // Starfield follows user drag only — no idle spin.
       starField.rotation.set(spin.rotX, spin.rotY, 0);
       // Clouds drift a touch faster than the surface for parallax.
@@ -557,8 +441,8 @@ export default function SatelliteOrbit() {
       rotMatrix.multiply(rotMatrixInner);
       sunDir.copy(sunLocal).applyMatrix4(rotMatrix).normalize();
 
-      // Meteor trails.
-      meteors.forEach((m) => m.update(elapsed));
+      // Advance real satellite positions (SGP4) and orbit-ring alignment.
+      satField.update();
 
       renderer.render(scene, camera);
     }
@@ -600,7 +484,7 @@ export default function SatelliteOrbit() {
       window.removeEventListener('pointercancel', endDrag);
       window.removeEventListener('resize', handleResize);
       observer.disconnect();
-      meteors.forEach((m) => m.dispose());
+      satField.dispose();
       scene.traverse((obj) => {
         if (obj.geometry) obj.geometry.dispose();
         const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
@@ -612,7 +496,6 @@ export default function SatelliteOrbit() {
           m.dispose();
         });
       });
-      sprite.dispose();
       if (container && renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
       }
