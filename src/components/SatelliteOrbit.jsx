@@ -441,7 +441,7 @@ export default function SatelliteOrbit() {
       rotMatrix.multiply(rotMatrixInner);
       sunDir.copy(sunLocal).applyMatrix4(rotMatrix).normalize();
 
-      // Advance real satellite positions (SGP4) and orbit-ring alignment.
+      // Advance satellite heads/trails along their cached orbit paths.
       satField.update();
 
       renderer.render(scene, camera);
