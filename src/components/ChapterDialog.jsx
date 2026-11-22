@@ -9,13 +9,15 @@ function Media({ media }) {
   const [reduced] = useState(prefersReducedMotion);
   if (!media) return null;
 
+  // No poster on the video: both clips open on a dark frame, so a mid-clip
+  // poster would flash before playback starts. The poster is only the
+  // still fallback for reduced motion.
   if (media.video && !reduced) {
     return (
       <video
         key={media.video}
         className="chapter__media"
         src={media.video}
-        poster={media.poster}
         autoPlay
         muted
         loop
