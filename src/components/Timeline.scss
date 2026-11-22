@@ -1,0 +1,350 @@
+// Horizontal timeline on wide screens, vertical list on narrow ones.
+$wide: 900px;
+
+.tl {
+  width: 100%;
+}
+
+// ── Horizontal ────────────────────────────────────────────────
+
+.tl-h {
+  display: none;
+
+  @media (min-width: $wide) {
+    display: grid;
+    gap: 0.75rem;
+  }
+}
+
+.tl-h__row {
+  position: relative;
+}
+
+// Lane labels sit just above the left edge of each lane.
+.tl-h__label {
+  position: absolute;
+  left: 0;
+  top: -1.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.tl-h__row + .tl-h__row {
+  margin-top: 1.4rem;
+}
+
+.tl-h__lane {
+  position: relative;
+}
+
+.tl-h__lane--orgs {
+  height: 2.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.tl-h__lane--work {
+  height: clamp(4.5rem, 14vh, 8rem);
+}
+
+.tl-h__lane--edu {
+  height: clamp(2.6rem, 6vh, 3.4rem);
+}
+
+// Company name with a bracket line spanning its tenure.
+.tl-org {
+  position: absolute;
+  bottom: 0;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 0.15rem 0.55rem;
+  border-bottom: 1px solid var(--border-strong);
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    width: 1px;
+    height: 7px;
+    background: var(--border-strong);
+  }
+
+  &::before {
+    left: 0;
+  }
+
+  &::after {
+    right: 0;
+  }
+}
+
+.tl-org__name {
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 2vw, 1.9rem);
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+// Role / degree segments
+.tl-seg {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  text-align: left;
+  transition: background 0.25s var(--ease), border-color 0.25s var(--ease),
+    transform 0.25s var(--ease-out);
+
+
+  &:hover,
+  &:focus-visible,
+  &.is-active {
+    z-index: 2;
+    border-color: var(--accent-line);
+    background: var(--accent-soft);
+    transform: translateY(-2px);
+
+    .tl-seg__tip {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+
+  &.is-current {
+    border-color: var(--accent-line);
+    background: linear-gradient(180deg, var(--accent-soft), transparent 120%);
+  }
+}
+
+.tl-seg--edu {
+  display: flex;
+  align-items: center;
+  padding-block: 0.4rem;
+  border-style: dashed;
+  border-color: var(--border-strong);
+  background: transparent;
+}
+
+.tl-seg__title {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.tl-seg--edu .tl-seg__title {
+  -webkit-line-clamp: 1;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+// Hover tooltip
+.tl-seg__tip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.6rem);
+  z-index: 5;
+  display: grid;
+  gap: 0.15rem;
+  min-width: max-content;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: #141418;
+  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.8);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
+
+  strong {
+    font-weight: 600;
+    color: var(--text);
+  }
+}
+
+// Year axis
+.tl-h__axis {
+  position: relative;
+  height: 2rem;
+  margin-top: 0.6rem;
+  border-top: 1px solid var(--border);
+}
+
+.tl-tick {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 6px;
+  background: var(--border-strong);
+}
+
+.tl-tick__label {
+  position: absolute;
+  top: 0.55rem;
+  left: 0;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--text-faint);
+}
+
+// Only every other year label on mid-size screens
+@media (max-width: 1200px) {
+  .tl-tick:nth-child(even) .tl-tick__label {
+    display: none;
+  }
+}
+
+.tl-now {
+  position: absolute;
+  top: -5px;
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+}
+
+.tl-now__dot {
+  position: relative;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1px solid var(--accent);
+    animation: tlPulse 2.4s var(--ease-out) infinite;
+  }
+}
+
+.tl-now__label {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+@keyframes tlPulse {
+  from {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+// ── Vertical list ─────────────────────────────────────────────
+
+.tl-v {
+  position: relative;
+  display: grid;
+  gap: 0.35rem;
+  padding-left: 1.4rem;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 0.9rem;
+    bottom: 0.9rem;
+    width: 1px;
+    background: var(--border-strong);
+  }
+
+  @media (min-width: $wide) {
+    display: none;
+  }
+}
+
+.tl-v__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.1rem 1rem;
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  text-align: left;
+  transition: border-color 0.25s var(--ease), background 0.25s var(--ease);
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: calc(-1.4rem + 1px);
+    top: 1.15rem;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
+  }
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--accent-line);
+    background: var(--accent-soft);
+  }
+
+  &.is-current::before {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+}
+
+.tl-v__item--edu {
+  border-style: dashed;
+  background: transparent;
+}
+
+.tl-v__org {
+  grid-row: 1;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  line-height: 1.1;
+}
+
+.tl-v__years {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.tl-v__title {
+  grid-column: 1 / -1;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tl-now__dot::after {
+    animation: none;
+  }
+}

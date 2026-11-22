@@ -7,15 +7,12 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "fetch:sats": "node scripts/fetch-satellites.mjs",
     "favicon": "node scripts/make-favicon.mjs"
   },
   "dependencies": {
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "sass": "^1.103.1",
-    "satellite.js": "^3.0.1",
-    "three": "^0.185.1"
+    "sass": "^1.103.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.7.0",

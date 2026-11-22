@@ -1,12 +1,10 @@
 // All site content lives here so the components stay purely presentational.
+// Periods are "Mon YYYY — Mon YYYY" (or "Present"); src/chapters.js turns
+// them into positions on the timeline.
 
 export const profile = {
   name: "Bryce Anglin",
-  firstName: "Bryce",
-  lastName: "Anglin",
-  role: "Software Developer",
   location: "San Francisco, California",
-  greeting: "Hi, I'm",
   summary:
     "Whether it's visualizing and simulating satellite systems, helping people get in shape, or simulating autonomous physical systems, I always enjoy applying my skills to make the world a better place.",
 };
@@ -14,15 +12,13 @@ export const profile = {
 export const experience = [
   {
     company: "Parallel Domain",
+    short: "Parallel Domain",
     url: "https://paralleldomain.com/",
-    theme: "pd",
     id: "pd",
     location: "San Francisco, CA",
     blurb: "Photorealistic synthetic data & simulation for autonomous robotics",
-    backdrop: {
-      // Replica-generation clip from the paralleldomain.com homepage: camera
-      // captures resolving into a reconstructed 3D street on dark navy, which
-      // keeps the left-hand text column legible.
+    // Replica-generation clip from the paralleldomain.com homepage.
+    media: {
       video: "/pd-replica.mp4",
       poster: "/pd-replica-poster.jpg",
     },
@@ -36,23 +32,20 @@ export const experience = [
       {
         title: "Senior Software Developer",
         period: "Sep 2024 — Mar 2026",
-        description: "Led development of the customer-facing Python SDK and Python governance."
+        description: "Led development of the customer-facing Python SDK and Python governance.",
       },
     ],
   },
   {
     company: "Tempo",
+    short: "Tempo",
     url: "https://tempo.fit/",
-    theme: "tempo",
     id: "tempo",
-    highlight: true,
     location: "San Francisco, CA",
     blurb: "AI-powered home gym & virtual personal training",
-    backdrop: {
-      // DatoCMS media served by tempo.fit — home-gym equipment still (no people).
-      // A calmer, less busy backdrop than the looping workout clips.
-      image:
-        "https://www.datocms-assets.com/135987/1723905519-09e_studio_plus_d.jpeg",
+    // Home-gym equipment still served by tempo.fit's CMS.
+    media: {
+      image: "https://www.datocms-assets.com/135987/1723905519-09e_studio_plus_d.jpeg",
     },
     roles: [
       {
@@ -78,10 +71,9 @@ export const experience = [
   },
   {
     company: "The Aerospace Corporation",
+    short: "Aerospace Corp.",
     url: "https://www.aero.org/",
-    theme: "aerospace",
     id: "aerospace",
-    orbit: true,
     location: "Los Angeles, CA",
     blurb: "Satellite & space-systems engineering",
     roles: [
@@ -105,18 +97,24 @@ export const experience = [
 export const education = [
   {
     school: "University of California, Los Angeles",
+    short: "UCLA",
+    id: "ucla",
     degree: "M.S. Aerospace Engineering",
     focus: "System Controls",
-    period: "2016 — 2018",
+    location: "Los Angeles, CA",
+    period: "Sep 2016 — Jun 2018",
   },
   {
     school: "University of California, Davis",
+    short: "UC Davis",
+    id: "ucdavis",
     degree: "B.S. Mechanical Engineering",
     focus: "Technology Management",
-    period: "2011 — 2015",
+    location: "Davis, CA",
+    period: "Sep 2011 — Jun 2015",
   },
 ];
 
-// Fill these in to show social links in the footer, e.g.
+// Fill these in to show links in the footer, e.g.
 // { label: "GitHub", href: "https://github.com/…" }
 export const socials = [];
