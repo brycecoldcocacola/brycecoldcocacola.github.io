@@ -50,10 +50,10 @@
       // clearing to zero over the RGB/depth panel on the right.
       linear-gradient(
         90deg,
-        rgba(5, 6, 10, 0.92) 0%,
-        rgba(5, 6, 10, 0.78) 22%,
-        rgba(5, 6, 10, 0.42) 44%,
-        rgba(5, 6, 10, 0.10) 66%,
+        rgba(5, 6, 10, 0.94) 0%,
+        rgba(5, 6, 10, 0.86) 28%,
+        rgba(5, 6, 10, 0.55) 48%,
+        rgba(5, 6, 10, 0.12) 70%,
         rgba(5, 6, 10, 0.00) 88%
       ),
       // Cinematic top + bottom vignette so the section bleeds into the page.
@@ -116,21 +116,13 @@
 
 // Parallel Domain: keep the sensor data crisp, only grade down slightly and
 // drift very slowly so the still frame reads as an ambient backdrop.
+// The replica clip is already in motion, so no Ken Burns drift. Nudge it
+// right so the reconstruction sits beside the text column, not under it.
 .company--pd .company__media {
-  opacity: 0.92;
-  filter: contrast(1.06) brightness(0.88) saturate(1.02);
-  object-position: 55% center;
-  animation: pdDrift 42s ease-in-out infinite alternate;
-  transform-origin: 55% center;
-}
-
-@keyframes pdDrift {
-  from {
-    transform: scale(1.02);
-  }
-  to {
-    transform: scale(1.09);
-  }
+  opacity: 0.95;
+  filter: contrast(1.05) saturate(1.05);
+  transform: translateX(14%) scale(1.12);
+  transform-origin: center;
 }
 
 // On narrow / portrait viewports, `cover` would crop to the busy LiDAR→RGB
@@ -139,7 +131,7 @@
 // LiDAR cloud, and widen the scrim to cover the whole width.
 @media (max-width: 860px) {
   .company--pd .company__media {
-    object-position: 3% center;
+    transform: none;
   }
 
   .company--pd .company__bg::after {

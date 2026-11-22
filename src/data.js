@@ -20,13 +20,11 @@ export const experience = [
     location: "San Francisco, CA",
     blurb: "Photorealistic synthetic data & simulation for autonomous robotics",
     backdrop: {
-      // Sensor-suite cover art from paralleldomain.com: LiDAR point cloud on
-      // the left (naturally dark — perfect behind the text column), RGB camera
-      // with bounding-box annotations + depth map on the right.
-      image: "/pd-sensor-backdrop.jpg",
-      srcset:
-        "/pd-sensor-backdrop@1000.jpg 1000w, /pd-sensor-backdrop.jpg 1600w",
-      sizes: "100vw",
+      // Replica-generation clip from the paralleldomain.com homepage: camera
+      // captures resolving into a reconstructed 3D street on dark navy, which
+      // keeps the left-hand text column legible.
+      video: "/pd-replica.mp4",
+      poster: "/pd-replica-poster.jpg",
     },
     roles: [
       {

@@ -1,10 +1,64 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { experience } from "../data";
 import Reveal from "./Reveal";
 import "./Experience.scss";
 
 // The Three.js globe is heavy (~500 kB) and decorative — load it on demand.
 const SatelliteOrbit = lazy(() => import("./SatelliteOrbit"));
+
+// Ambient backdrop clip: only fetched/played while its section is near the
+// viewport, and replaced by the still poster for reduced-motion visitors.
+function BackdropVideo({ src, poster }) {
+  const ref = useRef(null);
+  const [reduced] = useState(
+    () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false,
+  );
+  const [load, setLoad] = useState(false);
+
+  const visible = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || reduced) return undefined;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        visible.current = entry.isIntersecting;
+        if (entry.isIntersecting) {
+          setLoad(true);
+          if (el.currentSrc) el.play().catch(() => {});
+        } else {
+          el.pause();
+        }
+      },
+      { rootMargin: "200px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [reduced]);
+
+  // Once the src is attached, start playback if the section is still in view.
+  useEffect(() => {
+    const el = ref.current;
+    if (load && el && visible.current) el.play().catch(() => {});
+  }, [load]);
+
+  if (reduced) {
+    return <img className="company__media" src={poster} alt="" decoding="async" loading="lazy" />;
+  }
+
+  return (
+    <video
+      ref={ref}
+      className="company__media"
+      poster={poster}
+      src={load ? src : undefined}
+      muted
+      loop
+      playsInline
+      preload={load ? "auto" : "none"}
+    />
+  );
+}
 
 function TagRow({ tags }) {
   return (
@@ -87,17 +141,7 @@ export default function Experience() {
                 />
               )}
               {company.backdrop && company.backdrop.video && (
-                <video
-                  className="company__media"
-                  poster={company.backdrop.poster}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                >
-                  <source src={company.backdrop.video} type="video/mp4" />
-                </video>
+                <BackdropVideo src={company.backdrop.video} poster={company.backdrop.poster} />
               )}
             </div>
             <div className="company__content">
