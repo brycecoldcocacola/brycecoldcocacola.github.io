@@ -19,7 +19,6 @@
   width: 100%;
   padding-inline: var(--gap);
   padding-block: var(--section-y);
-  scroll-snap-align: start;
   box-sizing: border-box;
 }
 
@@ -451,4 +450,33 @@
     cursor: grab;
     touch-action: none;
   }
+}
+
+// "01 / 03 — Experience" marker above each company name
+.company__index {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.company__index-num {
+  color: var(--accent);
+}
+
+// Slightly brighter body copy and frosted tags so text stays legible over
+// the busier backdrops.
+.role__desc {
+  color: #b9b8c2;
+}
+
+.company .tag {
+  background: rgba(10, 10, 12, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }

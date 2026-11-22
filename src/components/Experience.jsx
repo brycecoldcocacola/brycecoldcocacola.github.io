@@ -103,6 +103,14 @@ export default function Experience() {
             <div className="company__content">
               <div className="company__head">
                 <div className="company__id">
+                  <p className="company__index">
+                    <span className="company__index-num">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="company__index-total">
+                      / {String(experience.length).padStart(2, "0")} — Experience
+                    </span>
+                  </p>
                   <h3 className="company__name">
                     {company.url ? (
                       <a href={company.url} target="_blank" rel="noreferrer noopener">

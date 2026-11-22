@@ -1,20 +1,7 @@
 node_modules/
 dist/
 .DS_Store
-# visual-iteration scratch artifacts
-screenshot*.png
-shot-*.png
-burst_*.png
-Screenshot *.png
-shot-downres.mjs
-shot-aero.mjs
-shot-burst.mjs
-shot-console.mjs
-responsive-shots.mjs
-tempo-shot.mjs
-tempo-*.png
-big_tempo.png
-grab.png
-_shot.cjs
-pd-*.png
-_pd-candidates/
+# local visual-iteration scratch (screenshots, one-off scripts)
+*.png
+!public/**/*.png
+_scratch/

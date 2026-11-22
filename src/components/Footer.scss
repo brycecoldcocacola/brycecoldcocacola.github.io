@@ -1,87 +1,47 @@
 .footer {
   position: relative;
-  border-top: 1px solid var(--border);
-  padding-block: clamp(5rem, 12vh, 9rem) 2.5rem;
+  padding-block: 2rem 2.5rem;
 
   &::before {
     content: "";
     position: absolute;
     left: 50%;
     top: 0;
-    width: min(600px, 80%);
+    width: min(var(--shell), 90%);
     height: 1px;
     transform: translateX(-50%);
-    background: linear-gradient(
-      90deg,
-      transparent,
-      var(--accent-line),
-      transparent
-    );
+    background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
   }
 }
 
-.footer__cta {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(2.6rem, 7vw, 5rem);
-  line-height: 1.02;
-  letter-spacing: -0.02em;
-  margin-block: 1.1rem 1rem;
-
-  em {
-    font-style: italic;
-    color: var(--text-muted);
-  }
+.footer__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
 }
 
-.footer__sub {
-  color: var(--text-muted);
-  font-size: 1.05rem;
+.footer__copy,
+.footer__totop,
+.footer__socials a {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+
+.footer__dot {
+  margin-inline: 0.6rem;
 }
 
 .footer__socials {
   display: flex;
-  flex-wrap: wrap;
   gap: 1.5rem;
-  margin-top: 2rem;
-
-  a {
-    font-family: var(--font-mono);
-    font-size: 0.76rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 0.2rem;
-    transition: color 0.3s var(--ease), border-color 0.3s var(--ease);
-
-    &:hover {
-      color: var(--accent);
-      border-color: var(--accent);
-    }
-  }
 }
 
-.footer__bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-top: clamp(3rem, 8vh, 5rem);
-  padding-top: 1.6rem;
-  border-top: 1px solid var(--border);
-}
-
-.footer__copy {
-  font-family: var(--font-mono);
-  font-size: 0.74rem;
-  color: var(--text-faint);
-}
-
-.footer__totop {
-  font-family: var(--font-mono);
-  font-size: 0.74rem;
-  letter-spacing: 0.08em;
+.footer__totop,
+.footer__socials a {
   text-transform: uppercase;
   color: var(--text-muted);
   transition: color 0.3s var(--ease);

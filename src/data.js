@@ -32,7 +32,8 @@ export const experience = [
       {
         title: "Principal Software Developer",
         period: "Mar 2026 — Present",
-        description: "Led development of the our customer-facing dynamic world reconstruction product.".
+        description:
+          "Leading development of our customer-facing dynamic world reconstruction product.",
       },
       {
         title: "Senior Software Developer",
