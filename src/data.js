@@ -76,6 +76,12 @@ export const experience = [
     id: "aerospace",
     location: "Los Angeles, CA",
     blurb: "Satellite & space-systems engineering",
+    // Recording of the Three.js satellite globe this site used to embed
+    // (real orbits propagated from CelesTrak TLEs).
+    media: {
+      video: "/aerospace-globe.mp4",
+      poster: "/aerospace-globe-poster.jpg",
+    },
     roles: [
       {
         title: "Sr. Web & Graphics Software Developer",
@@ -91,6 +97,25 @@ export const experience = [
       },
     ],
     skills: ["Python", "TypeScript", "MongoDB", "Three.js"],
+  },
+  {
+    company: "UC Davis Bookstore",
+    short: "UC Davis Bookstore",
+    id: "bookstore",
+    location: "Davis, CA",
+    blurb: "Campus bookstore, part-time through college",
+    roles: [
+      {
+        title: "Student Staff Lead",
+        period: "Sep 2012 — Mar 2015",
+        description: "Led the bookstore's student staff for the rest of my time at UC Davis.",
+      },
+      {
+        title: "Art Department",
+        period: "Oct 2011 — Sep 2012",
+        description: "Started a month into freshman year, working in the art department.",
+      },
+    ],
   },
 ];
 
