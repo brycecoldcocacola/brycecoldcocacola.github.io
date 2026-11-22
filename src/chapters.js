@@ -49,7 +49,7 @@ const school = education.map((e) => {
     title: e.degree,
     // Only years are shown for degrees; months just place them on the axis.
     period: `${Math.floor(p.start)} — ${Math.floor(p.end)}`,
-    description: e.focus ? `Focus: ${e.focus}.` : "",
+    description: e.description || (e.focus ? `Focus: ${e.focus}.` : ""),
     location: e.location,
     ...p,
   };

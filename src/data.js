@@ -27,12 +27,13 @@ export const experience = [
         title: "Principal Software Developer",
         period: "Mar 2026 — Present",
         description:
-          "Leading development of our customer-facing dynamic world reconstruction product.",
+          "In 2026 I became a principal software developer. Today I lead development of our customer-facing dynamic world reconstruction product.",
       },
       {
         title: "Senior Software Developer",
         period: "Sep 2024 — Mar 2026",
-        description: "Led development of the customer-facing Python SDK and Python governance.",
+        description:
+          "Later that year I joined Parallel Domain, which builds synthetic data and simulation for autonomous robotics, as a senior software developer. I led development of our customer-facing Python SDK and our Python governance.",
       },
     ],
   },
@@ -52,19 +53,19 @@ export const experience = [
         title: "Tech Lead Manager",
         period: "Mar 2024 — Sep 2024",
         description:
-          "Led technical direction and execution of computer vision and machine learning.",
+          "In 2024 I stepped into a tech lead manager role, leading the technical direction and execution of our computer vision and machine learning work.",
       },
       {
         title: "Senior Full Stack Developer",
         period: "Apr 2023 — Mar 2024",
         description:
-          "Owned all machine learning tooling, infrastructure, data labeling, and analysis. Individual contributor on the ML team with an emphasis on improving in-house models.",
+          "Two years in, I became a senior full stack developer and took ownership of all of our machine learning tooling, infrastructure, data labeling, and analysis. I also worked as an individual contributor on the ML team, focused on improving our in-house models.",
       },
       {
         title: "Full Stack Developer",
         period: "Apr 2021 — Apr 2023",
         description:
-          "Built end-to-end tooling for the ML team: data collection, data exploration, data labeling, model development, training infrastructure, model deployment, and production monitoring.",
+          "In 2021 I left aerospace for Tempo, an AI-powered home gym, and joined as a full stack developer. I built end-to-end tooling for the ML team: data collection and exploration, data labeling, model development, training infrastructure, model deployment, and production monitoring.",
       },
     ],
     skills: ["Python", "AWS", "SQL", "Machine Learning", "Computer Vision"],
@@ -87,13 +88,13 @@ export const experience = [
         title: "Sr. Web & Graphics Software Developer",
         period: "Jun 2019 — Apr 2021",
         description:
-          "Built web-based visualization and propagation tools for real-time satellite constellations, plus the APIs and databases that enabled authoritative sources of truth for satellite information.",
+          "In 2019 I moved into software full time as a senior web and graphics developer. I built web-based visualization and propagation tools for real-time satellite constellations, along with the APIs and databases that became the authoritative source of truth for satellite information.",
       },
       {
         title: "Space Systems Engineer",
         period: "Jul 2015 — Jun 2019",
         description:
-          "Leveraged Python to extend state-of-the-art satellite communications analysis tools. Built internal tooling and automation supporting analysis frameworks, and led corporate L&D for Python.",
+          "Right out of college I joined The Aerospace Corporation as a space systems engineer. I used Python to extend state-of-the-art satellite communications analysis tools, built internal tooling and automation for our analysis frameworks, and ended up leading the company's Python training.",
       },
     ],
     skills: ["Python", "TypeScript", "MongoDB", "Three.js"],
@@ -108,12 +109,14 @@ export const experience = [
       {
         title: "Student Staff Lead",
         period: "Sep 2012 — Mar 2015",
-        description: "Led the bookstore's student staff for the rest of my time at UC Davis.",
+        description:
+          "After that first year I stepped up to lead the bookstore's student staff, and I stayed in that role until my final quarter at Davis.",
       },
       {
         title: "Art Department",
         period: "Oct 2011 — Sep 2012",
-        description: "Started a month into freshman year, working in the art department.",
+        description:
+          "A month into freshman year I picked up a job at the campus bookstore, starting out in the art department.",
       },
     ],
   },
@@ -126,6 +129,8 @@ export const education = [
     id: "ucla",
     degree: "M.S. Aerospace Engineering",
     focus: "System Controls",
+    description:
+      "In 2016 I started a master's in aerospace engineering at UCLA, focusing on system controls.",
     location: "Los Angeles, CA",
     period: "Sep 2016 — Jun 2018",
   },
@@ -135,6 +140,8 @@ export const education = [
     id: "ucdavis",
     degree: "B.S. Mechanical Engineering",
     focus: "Technology Management",
+    description:
+      "My story starts at UC Davis, where I studied mechanical engineering with a focus on technology management.",
     location: "Davis, CA",
     period: "Sep 2011 — Jun 2015",
   },
